@@ -1,167 +1,180 @@
-use std::str::FromStr;
+use std::{
+    collections::HashMap,
+    str::FromStr,
+};
 
-#[allow(unused_variables)]
+use rayon::prelude::*;
+
 pub fn p1(input: &str) -> u64 {
     input
-        .lines()
+        .par_lines()
         .map(|l| {
             let mut parts = l.split(' ');
-            let line = parts.next().unwrap();
+            let line = parts.next().unwrap_or_else(|| panic!("No pattern in line {l}"));
             let plan = parts
                 .next()
                 .map(|p| {
-                    let mut numbers = p.split(',');
+                    let numbers = p.split(',');
                     let mut result = vec![];
-                    while let Some(numberstring) = numbers.next() {
-                        result.push(i32::from_str(numberstring).unwrap());
+                    for numberstring in numbers {
+                        result.push(usize::from_str(numberstring).unwrap_or_else(|_| panic!("Malformed number in line {l}")));
                     }
                     result
                 })
-                .unwrap();
+                .unwrap_or_else(|| panic!("No numbers in line {l}"));
             (line, plan)
         })
         .map(|(l, plan)| {
-            generate_filtered(l, &plan)
-                .map(to_consecutive_groups)
-                .filter(|g| *g == plan)
-                .count() as u64
+            count(l, &plan) as u64
         })
         .sum::<u64>()
 }
 
-#[allow(unused_variables)]
 pub fn p2(input: &str) -> u64 {
-    todo!()
+    input
+        .par_lines()
+        .map(|l| {
+            let mut parts = l.split(' ');
+            let line = parts.next().unwrap_or_else(|| panic!("No pattern in line {l}"));
+            let plan = parts
+                .next()
+                .map(|p| {
+                    let numbers = p.split(',');
+                    let mut result = vec![];
+                    for numberstring in numbers {
+                        result.push(usize::from_str(numberstring).unwrap_or_else(|_| panic!("Malformed number in line {l}")));
+                    }
+                    result
+                })
+                .unwrap_or_else(|| panic!("No numbers in line {l}"));
+            (line, plan)
+        })
+        .map(|(l, plan)| count_part2(l, &plan) as u64)
+        .sum::<u64>()
 }
 
-fn matches_group(springs: &str, plan: &[i32]) -> bool {
-    let mut plan = plan.iter();
-    let mut group = plan.next().unwrap();
-    let mut chars = springs.chars();
-    while let Some(c) = chars.next() {
-        if c == '#' {
-            let mut count = 1;
-            while let Some(c) = chars.next() {
-                if c == '.' {
-                    if count == *group {
-                        let maybe_next_group = plan.next();
-                        if maybe_next_group.is_some() {
-                            group = maybe_next_group.unwrap();
-                            break;
-                        }
-                    } else {
-                        return false;
-                    }
-                } else {
-                    count += 1;
-                    if count > *group {
-                        return false;
-                    }
-                };
-            }
+fn count(cfg: &str, nums: &[usize]) -> usize {
+    if cfg.is_empty() {
+        if nums.is_empty() {
+            return 1;
+        } else {
+            return 0;
         }
     }
-    return true;
-}
-
-fn generate_filtered(
-    input: &str,
-    plan: &[i32],
-) -> impl Iterator<Item = String> {
-    let mut result = vec!["".to_string()];
-
-    for c in input.chars() {
-        let mut new_stubs: Vec<String> = vec![];
-        for mut s in result {
-            if c == '?' {
-                let mut copy = s.clone();
-                copy.push('.');
-                if matches_group(&copy, plan) {
-                    new_stubs.push(copy);
-                } // push this only if it matches group order
-                s.push('#');
-                if matches_group(&s, plan) {
-                    new_stubs.push(s);
-                }
-            } else {
-                s.push(c);
-                if matches_group(&s, plan) {
-                    new_stubs.push(s);
-                }
-            }
+    if nums.is_empty() {
+        if cfg.find('#').is_some() {
+            return 0;
+        } else {
+            return 1;
         }
-        result = new_stubs;
     }
-    result.into_iter()
-}
 
-fn to_consecutive_groups(s: String) -> Vec<i32> {
-    let mut result = vec![];
-    let mut chars = s.chars();
-    while let Some(c) = chars.next() {
-        if c == '#' {
-            let mut counter = 1;
-            while let Some(c) = chars.next() {
-                if c != '#' {
-                    break;
-                }
-                counter += 1;
-            }
-            result.push(counter);
+    let mut result = 0;
+
+    let c = cfg.chars().next();
+
+    if c == Some('.') || c == Some('?') {
+        // ? is . case
+        result += count(&cfg[1..], nums);
+    }
+
+    // if we treat the ? as # or have an #
+    // we can start a block. Look for a sequence
+    // of nums[0] characters that are # or ?
+    // and terminated by a . or ?
+    // that fulfills the first entry in nums,
+    // handle the rest of the string with the
+    // rest of the nums
+    if (c == Some('#') || c == Some('?'))
+        && nums[0] <= cfg.len()
+        && cfg[..nums[0]].find('.').is_none()
+        && (nums[0] == cfg.len() || cfg.chars().nth(nums[0]) != Some('#'))
+    {
+        // a block of nums[0] broken springs is possible
+        // handle the rest, if any
+        if nums[0] == cfg.len() {
+            result += count("", &nums[1..])
+        } else {
+            result += count(&cfg[nums[0] + 1..], &nums[1..])
         }
     }
     result
+
+}
+struct Cache<'a> {
+    cache: HashMap<(&'a str, &'a [usize]), usize>,
+}
+
+impl<'a> Cache<'a> {
+    fn count(&mut self, cfg: &'a str, nums: &'a [usize]) -> usize {
+        if cfg.is_empty() {
+            if nums.is_empty() {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+        if nums.is_empty() {
+            if cfg.find('#').is_some() {
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+
+        if let Some(result) = self.cache.get(&(cfg, nums)) {
+            return *result;
+        }
+
+        let mut result = 0;
+
+        let c = cfg.chars().next();
+
+        if c == Some('.') || c == Some('?') {
+            // ? is . case
+            result += self.count(&cfg[1..], nums);
+        }
+
+        // if we treat the ? as # or have an #
+        // we can start a block. Look for a sequence
+        // of nums[0] characters that are # or ?
+        // and terminated by a . or ?
+        // that fulfills the first entry in nums,
+        // handle the rest of the string with the
+        // rest of the nums
+        if (c == Some('#') || c == Some('?'))
+            && nums[0] <= cfg.len()
+            && cfg[..nums[0]].find('.').is_none()
+            && (nums[0] == cfg.len() || cfg.chars().nth(nums[0]) != Some('#'))
+        {
+            // a block of nums[0] broken springs is possible
+            // handle the rest, if any
+            if nums[0] == cfg.len() {
+                result += self.count("", &nums[1..])
+            } else {
+                result += self.count(&cfg[nums[0] + 1..], &nums[1..])
+            }
+        }
+        self.cache.insert((cfg, nums), result);
+        result
+    }
+}
+
+fn count_part2(cfg: &str, nums: &[usize]) -> usize {
+    let newinput = std::iter::repeat(cfg).take(5).collect::<Vec<_>>().join("?");
+    let newpattern = std::iter::repeat(nums)
+        .take(5)
+        .flatten()
+        .copied()
+        .collect::<Vec<_>>();
+    let mut cache = Cache{cache: HashMap::<(&str, &[usize]), usize>::new()};
+
+    cache.count(&newinput, &newpattern)
 }
 
 #[cfg(test)]
 mod tests {
-    use assertables::*;
-
     use super::*;
-
-    #[test]
-    fn test_map_to_groups() {
-        let input = vec![
-            "....###", "#...###", ".#..###", "##..###", "..#.###", "#.#.###",
-            ".##.###", "###.###",
-        ]
-        .into_iter()
-        .map(|s| s.to_string());
-        let result = input.map(to_consecutive_groups).collect::<Vec<_>>();
-        let expected = vec![
-            vec![3],
-            vec![1, 3],
-            vec![1, 3],
-            vec![2, 3],
-            vec![1, 3],
-            vec![1, 1, 3],
-            vec![2, 3],
-            vec![3, 3],
-        ];
-        assert_set_eq!(result, expected);
-    }
-
-    #[test]
-    fn test_line() {
-        let plan = vec![1, 1, 3];
-        let result = generate_filtered("???.###", &plan)
-            .map(to_consecutive_groups)
-            .filter(|g| *g == plan)
-            .count();
-        assert_eq!(result, 1);
-        let plan = vec![1, 1, 3];
-        let result = generate_filtered(".??..??...?##.", &plan)
-            .map(to_consecutive_groups)
-            .filter(|g| *g == plan)
-            .count();
-        assert_eq!(result, 4);
-        let plan = vec![3, 2, 1];
-        let result = generate_filtered("?###????????", &plan)
-            .map(to_consecutive_groups)
-            .filter(|g| *g == plan)
-            .count();
-        assert_eq!(result, 10);
-    }
 
     #[test]
     fn test_part1_sample() {
@@ -173,5 +186,31 @@ mod tests {
 ?###???????? 3,2,1";
         let result = p1(input);
         assert_eq!(result, 21);
+    }
+
+    #[test]
+    fn test_part2_sample() {
+        let input = "???.### 1,1,3
+.??..??...?##. 1,1,3
+?#?#?#?#?#?#?#? 1,3,1,6
+????.#...#... 4,1,1
+????.######..#####. 1,6,5
+?###???????? 3,2,1";
+        let result = p2(input);
+        assert_eq!(result, 525152);
+    }
+
+    #[test]
+    fn test_part1() {
+        let input = include_str!("../input.txt");
+        let result = p1(input);
+        assert_eq!(result, 7221);
+    }
+
+    #[test]
+    fn test_part2() {
+        let input = include_str!("../input.txt");
+        let result = p2(input);
+        assert_eq!(result, 7139671893722);
     }
 }
