@@ -6,13 +6,30 @@ use rayon::prelude::*;
 
 pub fn p1(input: &str) -> u64 {
     parse(input)
-        .map(|(l, plan)| count_part1(l, &plan) as u64)
+        .map(|(l, plan)| {
+            let mut cache = NoCache {};
+            cache.count(l, &plan) as u64
+        })
         .sum::<u64>()
 }
 
 pub fn p2(input: &str) -> u64 {
     parse(input)
-        .map(|(l, plan)| count_part2(l, &plan) as u64)
+        .map(|(l, plan)| {
+            let newinput =
+                std::iter::repeat(l).take(5).collect::<Vec<_>>().join("?");
+            let newpattern = std::iter::repeat(plan)
+                .take(5)
+                .flatten()
+                .collect::<Vec<_>>();
+            (newinput, newpattern)
+        })
+        .map(|(l, plan)| {
+            let mut cache = Cache {
+                cache: AHashMap::new(),
+            };
+            cache.count(&l, &plan) as u64
+        })
         .sum::<u64>()
 }
 
@@ -109,10 +126,6 @@ impl Cached<'_> for NoCache {
     fn insert(&mut self, _key: (&str, &[usize]), _value: usize) {}
 }
 
-fn count_part1(l: &str, plan: &[usize]) -> usize {
-    let mut cache = NoCache {};
-    cache.count(l, plan)
-}
 
 struct Cache<'a> {
     cache: AHashMap<(&'a str, &'a [usize]), usize>,
@@ -126,19 +139,6 @@ impl<'a> Cached<'a> for Cache<'a> {
     fn insert(&mut self, key: (&'a str, &'a [usize]), value: usize) {
         self.cache.insert(key, value);
     }
-}
-
-fn count_part2(cfg: &str, nums: &[usize]) -> usize {
-    let newinput = std::iter::repeat(cfg).take(5).collect::<Vec<_>>().join("?");
-    let newpattern = std::iter::repeat(nums)
-        .take(5)
-        .flatten()
-        .copied()
-        .collect::<Vec<_>>();
-    let mut cache = Cache {
-        cache: AHashMap::new(),
-    };
-    cache.count(&newinput, &newpattern)
 }
 
 #[cfg(test)]
