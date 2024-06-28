@@ -6,7 +6,7 @@ use rayon::prelude::*;
 
 pub fn p1(input: &str) -> u64 {
     parse(input)
-        .map(|(l, plan)| count(l, &plan) as u64)
+        .map(|(l, plan)| count_part1(l, &plan) as u64)
         .sum::<u64>()
 }
 
@@ -42,62 +42,10 @@ fn parse<'a>(
         (pattern, plan)
     })
 }
+trait Cached<'a> {
+    fn get(&self, key: &(&str, &[usize])) -> Option<usize>;
+    fn insert(&mut self, key: (&'a str, &'a [usize]), value: usize);
 
-/// Non-memoizing count for part1
-fn count(cfg: &str, nums: &[usize]) -> usize {
-    if cfg.is_empty() {
-        if nums.is_empty() {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-    if nums.is_empty() {
-        if cfg.find('#').is_some() {
-            return 0;
-        } else {
-            return 1;
-        }
-    }
-
-    let mut result = 0;
-
-    let c = cfg.chars().next();
-
-    if c == Some('.') || c == Some('?') {
-        // ? is . case
-        result += count(&cfg[1..], nums);
-    }
-
-    // if we treat the ? as # or have an #
-    // we can start a block. Look for a sequence
-    // of nums[0] characters that are # or ?
-    // and terminated by a . or ?
-    // that fulfills the first entry in nums,
-    // handle the rest of the string with the
-    // rest of the nums
-    if (c == Some('#') || c == Some('?'))
-        && nums[0] <= cfg.len()
-        && cfg[..nums[0]].find('.').is_none()
-        && (nums[0] == cfg.len() || cfg.chars().nth(nums[0]) != Some('#'))
-    {
-        // a block of nums[0] broken springs is possible
-        // handle the rest, if any
-        if nums[0] == cfg.len() {
-            result += count("", &nums[1..])
-        } else {
-            result += count(&cfg[nums[0] + 1..], &nums[1..])
-        }
-    }
-    result
-}
-
-struct Cache<'a> {
-    cache: AHashMap<(&'a str, &'a [usize]), usize>,
-}
-
-impl<'a> Cache<'a> {
-    /// memoizing count for part2
     fn count(&mut self, cfg: &'a str, nums: &'a [usize]) -> usize {
         if cfg.is_empty() {
             if nums.is_empty() {
@@ -114,8 +62,8 @@ impl<'a> Cache<'a> {
             }
         }
 
-        if let Some(result) = self.cache.get(&(cfg, nums)) {
-            return *result;
+        if let Some(result) = self.get(&(cfg, nums)) {
+            return result;
         }
 
         let mut result = 0;
@@ -146,13 +94,40 @@ impl<'a> Cache<'a> {
                 result += self.count(&cfg[nums[0] + 1..], &nums[1..])
             }
         }
-        self.cache.insert((cfg, nums), result);
+        self.insert((cfg, nums), result);
         result
     }
 }
 
-/// Replicate the input according to part2 rules,
-/// use memoizing count to resolve the problem.
+struct NoCache;
+
+impl Cached<'_> for NoCache {
+    fn get(&self, _key: &(&str, &[usize])) -> Option<usize> {
+        None
+    }
+
+    fn insert(&mut self, _key: (&str, &[usize]), _value: usize) {}
+}
+
+fn count_part1(l: &str, plan: &[usize]) -> usize {
+    let mut cache = NoCache {};
+    cache.count(l, plan)
+}
+
+struct Cache<'a> {
+    cache: AHashMap<(&'a str, &'a [usize]), usize>,
+}
+
+impl<'a> Cached<'a> for Cache<'a> {
+    fn get(&self, key: &(&str, &[usize])) -> Option<usize> {
+        self.cache.get(key).copied()
+    }
+
+    fn insert(&mut self, key: (&'a str, &'a [usize]), value: usize) {
+        self.cache.insert(key, value);
+    }
+}
+
 fn count_part2(cfg: &str, nums: &[usize]) -> usize {
     let newinput = std::iter::repeat(cfg).take(5).collect::<Vec<_>>().join("?");
     let newpattern = std::iter::repeat(nums)
@@ -161,7 +136,7 @@ fn count_part2(cfg: &str, nums: &[usize]) -> usize {
         .copied()
         .collect::<Vec<_>>();
     let mut cache = Cache {
-        cache: AHashMap::<(&str, &[usize]), usize>::new(),
+        cache: AHashMap::new(),
     };
     cache.count(&newinput, &newpattern)
 }
