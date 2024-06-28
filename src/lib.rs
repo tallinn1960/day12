@@ -16,31 +16,31 @@ pub fn p2(input: &str) -> u64 {
         .sum::<u64>()
 }
 
-fn parse<'a>(input: &'a str) -> rayon::iter::Map<rayon::str::Lines, impl Fn(&'a str) -> (&'a str, Vec<usize>)> {
-    input
-        .par_lines()
-        .map(|l| {
-            let mut parts = l.split(' ');
-            let line = parts
-                .next()
-                .unwrap_or_else(|| panic!("No pattern in line {l}"));
-            let plan = parts
-                .next()
-                .map(|p| {
-                    let numbers = p.split(',');
-                    let mut result = vec![];
-                    for numberstring in numbers {
-                        result.push(
-                            usize::from_str(numberstring).unwrap_or_else(
-                                |_| panic!("Malformed number in line {l}"),
-                            ),
-                        );
-                    }
-                    result
+fn parse<'a>(
+    input: &'a str,
+) -> rayon::iter::Map<
+    rayon::str::Lines,
+    impl Fn(&'a str) -> (&'a str, Vec<usize>),
+> {
+    input.par_lines().map(|line| {
+        let mut parts = line.split(' ');
+        let pattern = parts
+            .next()
+            .unwrap_or_else(|| panic!("No pattern in line {line}"));
+        let plan = parts
+            .next()
+            .map(|p| {
+                let numbers = p.split(',');
+                numbers.fold(vec![], |mut acc, numberstring| {
+                    acc.push(usize::from_str(numberstring).unwrap_or_else(
+                        |_| panic!("Malformed number in line {line}"),
+                    ));
+                    acc
                 })
-                .unwrap_or_else(|| panic!("No numbers in line {l}"));
-            (line, plan)
-        })
+            })
+            .unwrap_or_else(|| panic!("No numbers in line {line}"));
+        (pattern, plan)
+    })
 }
 
 /// Non-memoizing count for part1
