@@ -1,5 +1,7 @@
-use std::{collections::HashMap, str::FromStr};
+// BTreeMap is slightly slower here
+use std::str::FromStr;
 
+use ahash::AHashMap;
 use rayon::prelude::*;
 
 pub fn p1(input: &str) -> u64 {
@@ -110,7 +112,7 @@ fn count(cfg: &str, nums: &[usize]) -> usize {
 }
 
 struct Cache<'a> {
-    cache: HashMap<(&'a str, &'a [usize]), usize>,
+    cache: AHashMap<(&'a str, &'a [usize]), usize>,
 }
 
 impl<'a> Cache<'a> {
@@ -176,7 +178,7 @@ fn count_part2(cfg: &str, nums: &[usize]) -> usize {
         .copied()
         .collect::<Vec<_>>();
     let mut cache = Cache {
-        cache: HashMap::<(&str, &[usize]), usize>::new(),
+        cache: AHashMap::<(&str, &[usize]), usize>::new(),
     };
     cache.count(&newinput, &newpattern)
 }

@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 rayon = "1.5.1"
+ahash = "0.8.11"
 
 [dev-dependencies]
 criterion = "0.5.1"
