@@ -5,16 +5,20 @@ use ahash::AHashMap;
 use rayon::prelude::*;
 
 pub fn p1(input: &str) -> u64 {
-    parse(input)
+    input
+        .par_lines()
+        .map(parse)
         .map(|(l, plan)| {
-            let mut cache = NoCache {};
+            let mut cache = NoCache::default();
             cache.count(l, &plan) as u64
         })
         .sum::<u64>()
 }
 
 pub fn p2(input: &str) -> u64 {
-    parse(input)
+    input
+        .par_lines()
+        .map(parse)
         .map(|(l, plan)| {
             let newinput =
                 std::iter::repeat(l).take(5).collect::<Vec<_>>().join("?");
@@ -25,40 +29,32 @@ pub fn p2(input: &str) -> u64 {
             (newinput, newpattern)
         })
         .map(|(l, plan)| {
-            let mut cache = Cache {
-                cache: AHashMap::new(),
-            };
+            let mut cache = Cache::default();
             cache.count(&l, &plan) as u64
         })
         .sum::<u64>()
 }
 
-fn parse<'a>(
-    input: &'a str,
-) -> rayon::iter::Map<
-    rayon::str::Lines,
-    impl Fn(&'a str) -> (&'a str, Vec<usize>),
-> {
-    input.par_lines().map(|line| {
-        let mut parts = line.split(' ');
-        let pattern = parts
-            .next()
-            .unwrap_or_else(|| panic!("No pattern in line {line}"));
-        let plan = parts
-            .next()
-            .map(|p| {
-                let numbers = p.split(',');
-                numbers.fold(vec![], |mut acc, numberstring| {
-                    acc.push(usize::from_str(numberstring).unwrap_or_else(
-                        |_| panic!("Malformed number in line {line}"),
-                    ));
-                    acc
-                })
+fn parse<'a>(line: &'a str) -> (&'a str, Vec<usize>) {
+    let mut parts = line.split(' ');
+    let pattern = parts
+        .next()
+        .unwrap_or_else(|| panic!("No pattern in line {line}"));
+    let plan = parts
+        .next()
+        .map(|p| {
+            let numbers = p.split(',');
+            numbers.fold(vec![], |mut acc, numberstring| {
+                acc.push(usize::from_str(numberstring).unwrap_or_else(|_| {
+                    panic!("Malformed number in line {line}")
+                }));
+                acc
             })
-            .unwrap_or_else(|| panic!("No numbers in line {line}"));
-        (pattern, plan)
-    })
+        })
+        .unwrap_or_else(|| panic!("No numbers in line {line}"));
+    (pattern, plan)
 }
+
 trait Cached<'a> {
     fn get(&self, key: &(&str, &[usize])) -> Option<usize>;
     fn insert(&mut self, key: (&'a str, &'a [usize]), value: usize);
@@ -116,6 +112,7 @@ trait Cached<'a> {
     }
 }
 
+#[derive(Default)]
 struct NoCache;
 
 impl Cached<'_> for NoCache {
@@ -126,7 +123,7 @@ impl Cached<'_> for NoCache {
     fn insert(&mut self, _key: (&str, &[usize]), _value: usize) {}
 }
 
-
+#[derive(Default)]
 struct Cache<'a> {
     cache: AHashMap<(&'a str, &'a [usize]), usize>,
 }
