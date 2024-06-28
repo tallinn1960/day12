@@ -5,35 +5,18 @@ use ahash::AHashMap;
 use rayon::prelude::*;
 
 pub fn p1(input: &str) -> u64 {
-    input
-        .par_lines()
-        .map(|l| {
-            let mut parts = l.split(' ');
-            let line = parts
-                .next()
-                .unwrap_or_else(|| panic!("No pattern in line {l}"));
-            let plan = parts
-                .next()
-                .map(|p| {
-                    let numbers = p.split(',');
-                    let mut result = vec![];
-                    for numberstring in numbers {
-                        result.push(
-                            usize::from_str(numberstring).unwrap_or_else(
-                                |_| panic!("Malformed number in line {l}"),
-                            ),
-                        );
-                    }
-                    result
-                })
-                .unwrap_or_else(|| panic!("No numbers in line {l}"));
-            (line, plan)
-        })
+    parse(input)
         .map(|(l, plan)| count(l, &plan) as u64)
         .sum::<u64>()
 }
 
 pub fn p2(input: &str) -> u64 {
+    parse(input)
+        .map(|(l, plan)| count_part2(l, &plan) as u64)
+        .sum::<u64>()
+}
+
+fn parse<'a>(input: &'a str) -> rayon::iter::Map<rayon::str::Lines, impl Fn(&'a str) -> (&'a str, Vec<usize>)> {
     input
         .par_lines()
         .map(|l| {
@@ -58,8 +41,6 @@ pub fn p2(input: &str) -> u64 {
                 .unwrap_or_else(|| panic!("No numbers in line {l}"));
             (line, plan)
         })
-        .map(|(l, plan)| count_part2(l, &plan) as u64)
-        .sum::<u64>()
 }
 
 /// Non-memoizing count for part1
@@ -170,6 +151,8 @@ impl<'a> Cache<'a> {
     }
 }
 
+/// Replicate the input according to part2 rules,
+/// use memoizing count to resolve the problem.
 fn count_part2(cfg: &str, nums: &[usize]) -> usize {
     let newinput = std::iter::repeat(cfg).take(5).collect::<Vec<_>>().join("?");
     let newpattern = std::iter::repeat(nums)
