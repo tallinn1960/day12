@@ -1,7 +1,4 @@
-use std::{
-    collections::HashMap,
-    str::FromStr,
-};
+use std::{collections::HashMap, str::FromStr};
 
 use rayon::prelude::*;
 
@@ -10,23 +7,27 @@ pub fn p1(input: &str) -> u64 {
         .par_lines()
         .map(|l| {
             let mut parts = l.split(' ');
-            let line = parts.next().unwrap_or_else(|| panic!("No pattern in line {l}"));
+            let line = parts
+                .next()
+                .unwrap_or_else(|| panic!("No pattern in line {l}"));
             let plan = parts
                 .next()
                 .map(|p| {
                     let numbers = p.split(',');
                     let mut result = vec![];
                     for numberstring in numbers {
-                        result.push(usize::from_str(numberstring).unwrap_or_else(|_| panic!("Malformed number in line {l}")));
+                        result.push(
+                            usize::from_str(numberstring).unwrap_or_else(
+                                |_| panic!("Malformed number in line {l}"),
+                            ),
+                        );
                     }
                     result
                 })
                 .unwrap_or_else(|| panic!("No numbers in line {l}"));
             (line, plan)
         })
-        .map(|(l, plan)| {
-            count(l, &plan) as u64
-        })
+        .map(|(l, plan)| count(l, &plan) as u64)
         .sum::<u64>()
 }
 
@@ -35,14 +36,20 @@ pub fn p2(input: &str) -> u64 {
         .par_lines()
         .map(|l| {
             let mut parts = l.split(' ');
-            let line = parts.next().unwrap_or_else(|| panic!("No pattern in line {l}"));
+            let line = parts
+                .next()
+                .unwrap_or_else(|| panic!("No pattern in line {l}"));
             let plan = parts
                 .next()
                 .map(|p| {
                     let numbers = p.split(',');
                     let mut result = vec![];
                     for numberstring in numbers {
-                        result.push(usize::from_str(numberstring).unwrap_or_else(|_| panic!("Malformed number in line {l}")));
+                        result.push(
+                            usize::from_str(numberstring).unwrap_or_else(
+                                |_| panic!("Malformed number in line {l}"),
+                            ),
+                        );
                     }
                     result
                 })
@@ -53,6 +60,7 @@ pub fn p2(input: &str) -> u64 {
         .sum::<u64>()
 }
 
+/// Non-memoizing count for part1
 fn count(cfg: &str, nums: &[usize]) -> usize {
     if cfg.is_empty() {
         if nums.is_empty() {
@@ -99,13 +107,14 @@ fn count(cfg: &str, nums: &[usize]) -> usize {
         }
     }
     result
-
 }
+
 struct Cache<'a> {
     cache: HashMap<(&'a str, &'a [usize]), usize>,
 }
 
 impl<'a> Cache<'a> {
+    /// memoizing count for part2
     fn count(&mut self, cfg: &'a str, nums: &'a [usize]) -> usize {
         if cfg.is_empty() {
             if nums.is_empty() {
@@ -127,7 +136,6 @@ impl<'a> Cache<'a> {
         }
 
         let mut result = 0;
-
         let c = cfg.chars().next();
 
         if c == Some('.') || c == Some('?') {
@@ -167,8 +175,9 @@ fn count_part2(cfg: &str, nums: &[usize]) -> usize {
         .flatten()
         .copied()
         .collect::<Vec<_>>();
-    let mut cache = Cache{cache: HashMap::<(&str, &[usize]), usize>::new()};
-
+    let mut cache = Cache {
+        cache: HashMap::<(&str, &[usize]), usize>::new(),
+    };
     cache.count(&newinput, &newpattern)
 }
 
