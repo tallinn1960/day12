@@ -8,9 +8,9 @@ pub fn p1(input: &str) -> u64 {
     input
         .par_lines()
         .map(parse)
-        .map(|(l, plan)| {
+        .map(|(pattern, groups)| {
             let mut cache = NoCache::default();
-            cache.count(l, &plan) as u64
+            cache.count(pattern, &groups) as u64
         })
         .sum::<u64>()
 }
@@ -20,17 +20,17 @@ pub fn p2(input: &str) -> u64 {
         .par_lines()
         .map(parse)
         .map(|(l, plan)| {
-            let newinput =
+            let newpattern =
                 std::iter::repeat(l).take(5).collect::<Vec<_>>().join("?");
-            let newpattern = std::iter::repeat(plan)
+            let newgroups = std::iter::repeat(plan)
                 .take(5)
                 .flatten()
                 .collect::<Vec<_>>();
-            (newinput, newpattern)
+            (newpattern, newgroups)
         })
-        .map(|(l, plan)| {
+        .map(|(pattern, groups)| {
             let mut cache = Cache::default();
-            cache.count(&l, &plan) as u64
+            cache.count(&pattern, &groups) as u64
         })
         .sum::<u64>()
 }
@@ -43,8 +43,7 @@ fn parse<'a>(line: &'a str) -> (&'a str, Vec<usize>) {
     let plan = parts
         .next()
         .map(|p| {
-            let numbers = p.split(',');
-            numbers.fold(vec![], |mut acc, numberstring| {
+            p.split(',').fold(vec![], |mut acc, numberstring| {
                 acc.push(usize::from_str(numberstring).unwrap_or_else(|_| {
                     panic!("Malformed number in line {line}")
                 }));
@@ -59,32 +58,32 @@ trait Cached<'a> {
     fn get(&self, key: &(&str, &[usize])) -> Option<usize>;
     fn insert(&mut self, key: (&'a str, &'a [usize]), value: usize);
 
-    fn count(&mut self, cfg: &'a str, nums: &'a [usize]) -> usize {
-        if cfg.is_empty() {
-            if nums.is_empty() {
+    fn count(&mut self, pattern: &'a str, groups: &'a [usize]) -> usize {
+        if pattern.is_empty() {
+            if groups.is_empty() {
                 return 1;
             } else {
                 return 0;
             }
         }
-        if nums.is_empty() {
-            if cfg.find('#').is_some() {
+        if groups.is_empty() {
+            if pattern.find('#').is_some() {
                 return 0;
             } else {
                 return 1;
             }
         }
 
-        if let Some(result) = self.get(&(cfg, nums)) {
+        if let Some(result) = self.get(&(pattern, groups)) {
             return result;
         }
 
         let mut result = 0;
-        let c = cfg.chars().next();
+        let c = pattern.chars().next();
 
         if c == Some('.') || c == Some('?') {
             // ? is . case
-            result += self.count(&cfg[1..], nums);
+            result += self.count(&pattern[1..], groups);
         }
 
         // if we treat the ? as # or have an #
@@ -95,19 +94,19 @@ trait Cached<'a> {
         // handle the rest of the string with the
         // rest of the nums
         if (c == Some('#') || c == Some('?'))
-            && nums[0] <= cfg.len()
-            && cfg[..nums[0]].find('.').is_none()
-            && (nums[0] == cfg.len() || cfg.chars().nth(nums[0]) != Some('#'))
+            && groups[0] <= pattern.len()
+            && pattern[..groups[0]].find('.').is_none()
+            && (groups[0] == pattern.len() || pattern.chars().nth(groups[0]) != Some('#'))
         {
             // a block of nums[0] broken springs is possible
             // handle the rest, if any
-            if nums[0] == cfg.len() {
-                result += self.count("", &nums[1..])
+            if groups[0] == pattern.len() {
+                result += self.count("", &groups[1..])
             } else {
-                result += self.count(&cfg[nums[0] + 1..], &nums[1..])
+                result += self.count(&pattern[groups[0] + 1..], &groups[1..])
             }
         }
-        self.insert((cfg, nums), result);
+        self.insert((pattern, groups), result);
         result
     }
 }
