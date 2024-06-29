@@ -1,6 +1,4 @@
 
-#include <iostream>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <strstream>
@@ -20,7 +18,7 @@ std::tuple<std::string_view, std::vector<size_t>> parse(std::string_view line) {
     std::istrstream iss(groups.data(), groups.size());
     std::vector<size_t> vec;
     std::string num;
-    while (getline(iss, num, ','))
+    while (std::getline(iss, num, ','))
         vec.push_back(std::stoi(num));
     return std::make_tuple(pattern, vec);
 }

@@ -1,8 +1,8 @@
 pub mod cpp;
 
-// BTreeMap is slightly slower here
 use std::str::FromStr;
 
+// BTreeMap is slightly slower here
 use ahash::AHashMap;
 use rayon::prelude::*;
 
@@ -98,7 +98,8 @@ trait Cached<'a> {
         if (c == Some('#') || c == Some('?'))
             && groups[0] <= pattern.len()
             && pattern[..groups[0]].find('.').is_none()
-            && (groups[0] == pattern.len() || pattern.chars().nth(groups[0]) != Some('#'))
+            && (groups[0] == pattern.len()
+                || pattern.chars().nth(groups[0]) != Some('#'))
         {
             // a block of nums[0] broken springs is possible
             // handle the rest, if any
@@ -184,6 +185,13 @@ mod tests {
     fn test_part1() {
         let input = include_str!("../input.txt");
         let result = p1(input);
+        assert_eq!(result, 7221);
+    }
+
+    #[test]
+    fn test_part1_cpp() {
+        let input = include_str!("../input.txt");
+        let result = cpp::p1(input);
         assert_eq!(result, 7221);
     }
 
