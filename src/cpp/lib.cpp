@@ -1,32 +1,31 @@
 
-#include <cstdio>
-#include <fstream>
 #include <iostream>
-#include <istream>
-#include <span>
 #include <sstream>
 #include <string>
 #include <string_view>
-#include <sys/_types/_size_t.h>
-#include <tuple>
-#include <vector>
 #include <strstream>
+#include <vector>
+#include <tuple>
+#include <span>
 
-std::tuple<std::string, std::vector<size_t>> parse(std::string line) {
-    std::istringstream iss(line);
-    std::string pattern;
-    getline(iss, pattern, ' ');
-    std::string groups;
-    getline(iss, groups, ' ');
+std::tuple<std::string_view, std::vector<size_t>> parse(std::string_view line) {
+
+    std::string_view pattern;
+    std::string_view groups;
+
+    auto p = line.find(' ');
+    pattern = line.substr(0, p);
+    groups = line.substr(p + 1);
+
+    std::istrstream iss(groups.data(), groups.size());
     std::vector<size_t> vec;
-    std::istringstream iss2(groups);
     std::string num;
-    while (getline(iss2, num, ','))
+    while (getline(iss, num, ','))
         vec.push_back(std::stoi(num));
     return std::make_tuple(pattern, vec);
 }
 
-size_t count(const std::string &pattern, const std::span<size_t> &groups) {
+size_t count(const std::string_view &pattern, const std::span<size_t> &groups) {
     if (pattern.empty()) {
         if (groups.empty()) {
             return 1;
