@@ -1,4 +1,6 @@
 
+#include <charconv>
+#include <cstddef>
 #include <span>
 #include <string>
 #include <string_view>
@@ -15,11 +17,19 @@ std::tuple<std::string_view, std::vector<size_t>> parse(std::string_view line) {
     pattern = line.substr(0, p);
     groups = line.substr(p + 1);
 
-    std::istrstream iss(groups.data(), groups.size());
     std::vector<size_t> vec;
-    std::string num;
-    while (std::getline(iss, num, ','))
-        vec.push_back(std::stoi(num));
+    size_t pos = 0;
+    while (pos < groups.size()) {
+        auto p = groups.find(',', pos);
+        if (p == std::string::npos) {
+            p = groups.size();
+        }
+        size_t val;
+        std::from_chars(groups.data() + pos, groups.data() + p, val);
+        vec.push_back(val);
+        pos = p + 1;
+    }
+
     return std::make_tuple(pattern, vec);
 }
 
@@ -60,29 +70,6 @@ size_t count(const std::string_view &pattern, const std::span<size_t> &groups) {
     return res;
 }
 
-size_t part1(std::span<const char> input) {
-    std::string line;
-    size_t res = 0;
-    std::istrstream in(input.data(), input.size());
-    while (std::getline(in, line)) {
-        auto [pattern, groups] = parse(line);
-        res += count(pattern, groups);
-    };
-    return res;
-}
-
-size_t part2(std::span<const char> input) { return 0; }
-
-extern "C" {
-size_t part1_c(const char *input, size_t input_len) {
-    return part1(std::span<const char>(input, input_len));
-}
-size_t part2_c(const char *input, size_t input_len) {
-    return part2(std::span<const char>(input, input_len));
-}
-}
-
-// given a span of chars, create an iterator that emits all lines separated by the newline character
 
 template <typename T> class line_iterator {
     T begin_;
@@ -118,4 +105,25 @@ template <typename T> class line_iterator {
 
     iterator begin() { return iterator(begin_, end_, delim_); }
     iterator end() { return iterator(end_, end_, delim_); }
-}; 
+};
+
+size_t part1(std::span<const char> input) {
+    std::string line;
+    size_t res = 0;
+    for (auto l : line_iterator(input.begin(), input.end(), '\n')) {
+        auto [pattern, groups] = parse(l);
+        res += count(pattern, groups);
+    }
+    return res;
+}
+
+size_t part2(std::span<const char> input) { return 0; }
+
+extern "C" {
+size_t part1_c(const char *input, size_t input_len) {
+    return part1(std::span<const char>(input, input_len));
+}
+size_t part2_c(const char *input, size_t input_len) {
+    return part2(std::span<const char>(input, input_len));
+}
+} 
