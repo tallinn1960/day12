@@ -11,8 +11,19 @@ pub fn p1(input: &str) -> u64 {
         .par_lines()
         .map(parse)
         .map(|(pattern, groups)| {
-            let mut cache = NoCache::default();
-            cache.count(pattern, &groups) as u64
+            // part1 is solved much faster without an cache
+            count(&mut NoCache::default(), pattern, &groups) as u64
+        })
+        .sum::<u64>()
+}
+
+pub fn p1_single_threaded(input: &str) -> u64 {
+    input
+        .lines()
+        .map(parse)
+        .map(|(pattern, groups)| {
+            // part1 is solved much faster without an cache
+            count(&mut NoCache::default(), pattern, &groups) as u64
         })
         .sum::<u64>()
 }
@@ -31,8 +42,8 @@ pub fn p2(input: &str) -> u64 {
             (newpattern, newgroups)
         })
         .map(|(pattern, groups)| {
-            let mut cache = Cache::default();
-            cache.count(&pattern, &groups) as u64
+            // part2 is solved much faster with a cache, its ms vs hours
+            count(&mut Cache::default(), &pattern, &groups) as u64
         })
         .sum::<u64>()
 }
@@ -56,68 +67,74 @@ fn parse<'a>(line: &'a str) -> (&'a str, Vec<usize>) {
     (pattern, plan)
 }
 
-trait Cached<'a> {
+trait CacheStorage<'a>: Default {
     fn get(&self, key: &(&str, &[usize])) -> Option<usize>;
     fn insert(&mut self, key: (&'a str, &'a [usize]), value: usize);
+}
 
-    fn count(&mut self, pattern: &'a str, groups: &'a [usize]) -> usize {
-        if pattern.is_empty() {
-            if groups.is_empty() {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
+fn count<'a>(
+    cache: &mut impl CacheStorage<'a>,
+    pattern: &'a str,
+    groups: &'a [usize],
+) -> usize {
+    // uses recursion, but stack usage per call is low and depth is
+    // limited by the length of the pattern
+    if pattern.is_empty() {
         if groups.is_empty() {
-            if pattern.find('#').is_some() {
-                return 0;
-            } else {
-                return 1;
-            }
+            return 1;
+        } else {
+            return 0;
         }
-
-        if let Some(result) = self.get(&(pattern, groups)) {
-            return result;
-        }
-
-        let mut result = 0;
-        let c = pattern.chars().next();
-
-        if c == Some('.') || c == Some('?') {
-            // ? is . case
-            result += self.count(&pattern[1..], groups);
-        }
-
-        // if we treat the ? as # or have an #
-        // we can start a block. Look for a sequence
-        // of nums[0] characters that are # or ?
-        // and terminated by a . or ?
-        // that fulfills the first entry in nums,
-        // handle the rest of the string with the
-        // rest of the nums
-        if (c == Some('#') || c == Some('?'))
-            && groups[0] <= pattern.len()
-            && pattern[..groups[0]].find('.').is_none()
-            && (groups[0] == pattern.len()
-                || pattern.chars().nth(groups[0]) != Some('#'))
-        {
-            // a block of nums[0] broken springs is possible
-            // handle the rest, if any
-            if groups[0] == pattern.len() {
-                result += self.count("", &groups[1..])
-            } else {
-                result += self.count(&pattern[groups[0] + 1..], &groups[1..])
-            }
-        }
-        self.insert((pattern, groups), result);
-        result
     }
+    if groups.is_empty() {
+        if pattern.find('#').is_some() {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    if let Some(result) = cache.get(&(pattern, groups)) {
+        return result;
+    }
+
+    let mut result = 0;
+    let c = pattern.chars().next();
+
+    if c == Some('.') || c == Some('?') {
+        // ? is . case
+        result += count(cache, &pattern[1..], groups);
+    }
+
+    // if we treat the ? as # or have an #
+    // we can start a block. Look for a sequence
+    // of nums[0] characters that are # or ?
+    // and terminated by a . or ?
+    // that fulfills the first entry in nums,
+    // handle the rest of the string with the
+    // rest of the nums
+    if (c == Some('#') || c == Some('?'))
+        && groups[0] <= pattern.len()
+        && pattern[..groups[0]].find('.').is_none()
+        && (groups[0] == pattern.len()
+            || pattern.chars().nth(groups[0]) != Some('#'))
+    {
+        // a block of nums[0] broken springs is possible
+        // handle the rest, if any
+        if groups[0] == pattern.len() {
+            result += count(cache, "", &groups[1..])
+        } else {
+            result += count(cache, &pattern[groups[0] + 1..], &groups[1..])
+        }
+    }
+    cache.insert((pattern, groups), result);
+    result
 }
 
 #[derive(Default)]
 struct NoCache;
 
-impl Cached<'_> for NoCache {
+impl CacheStorage<'_> for NoCache {
     fn get(&self, _key: &(&str, &[usize])) -> Option<usize> {
         None
     }
@@ -130,7 +147,7 @@ struct Cache<'a> {
     cache: AHashMap<(&'a str, &'a [usize]), usize>,
 }
 
-impl<'a> Cached<'a> for Cache<'a> {
+impl<'a> CacheStorage<'a> for Cache<'a> {
     fn get(&self, key: &(&str, &[usize])) -> Option<usize> {
         self.cache.get(key).copied()
     }
