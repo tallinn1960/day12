@@ -108,7 +108,6 @@ template <typename T> class line_iterator {
 };
 
 size_t part1(std::string_view input) {
-    std::string line;
     size_t res = 0;
     for (auto l : line_iterator(input.begin(), input.end(), '\n')) {
         auto [pattern, groups] = parse(l);
@@ -117,7 +116,7 @@ size_t part1(std::string_view input) {
     return res;
 }
 
-size_t part2(std::span<const char> input) { return 0; }
+size_t part2(std::string_view input) { return 0; }
 
 extern "C" {
 size_t part1_c(const char *input, size_t input_len) {
