@@ -4,6 +4,7 @@ use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
 use day12::{p1, p2};
 use std::fs::File;
 use std::io::Read;
+use std::time::Duration;
 
 fn bench_p1(c: &mut Criterion) {
     let mut g = c.benchmark_group("criterion");
@@ -24,6 +25,7 @@ fn bench_p1(c: &mut Criterion) {
 
 fn bench_p1_cpp(c: &mut Criterion) {
     let mut g = c.benchmark_group("criterion");
+    g.measurement_time(Duration::from_secs(10));
     g.bench_function("part1_cpp", |b| {
         b.iter_batched(
             || {
