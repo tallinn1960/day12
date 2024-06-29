@@ -1,10 +1,10 @@
 
+#include <span>
 #include <string>
 #include <string_view>
 #include <strstream>
-#include <vector>
 #include <tuple>
-#include <span>
+#include <vector>
 
 std::tuple<std::string_view, std::vector<size_t>> parse(std::string_view line) {
 
@@ -81,4 +81,3 @@ size_t part2_c(char *input, size_t input_len) {
     return part2(std::span<char>(input, input_len));
 }
 }
-
