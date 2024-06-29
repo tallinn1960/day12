@@ -1,4 +1,3 @@
-
 #include <charconv>
 #include <cstddef>
 #include <span>
@@ -7,6 +6,7 @@
 #include <strstream>
 #include <tuple>
 #include <vector>
+#include <algorithm>
 
 std::tuple<std::string_view, std::vector<size_t>> parse(std::string_view line) {
 
@@ -107,7 +107,7 @@ template <typename T> class line_iterator {
     iterator end() { return iterator(end_, end_, delim_); }
 };
 
-size_t part1(std::span<const char> input) {
+size_t part1(std::string_view input) {
     std::string line;
     size_t res = 0;
     for (auto l : line_iterator(input.begin(), input.end(), '\n')) {
@@ -121,9 +121,9 @@ size_t part2(std::span<const char> input) { return 0; }
 
 extern "C" {
 size_t part1_c(const char *input, size_t input_len) {
-    return part1(std::span<const char>(input, input_len));
+    return part1(std::string_view(input, input_len));
 }
 size_t part2_c(const char *input, size_t input_len) {
-    return part2(std::span<const char>(input, input_len));
+    return part2(std::string_view(input, input_len));
 }
 } 
