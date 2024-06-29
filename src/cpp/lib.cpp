@@ -60,7 +60,7 @@ size_t count(const std::string_view &pattern, const std::span<size_t> &groups) {
     return res;
 }
 
-size_t part1(std::span<char> input) {
+size_t part1(std::span<const char> input) {
     std::string line;
     size_t res = 0;
     std::istrstream in(input.data(), input.size());
@@ -71,13 +71,51 @@ size_t part1(std::span<char> input) {
     return res;
 }
 
-size_t part2(std::span<char> input) { return 0; }
+size_t part2(std::span<const char> input) { return 0; }
 
 extern "C" {
-size_t part1_c(char *input, size_t input_len) {
-    return part1(std::span<char>(input, input_len));
+size_t part1_c(const char *input, size_t input_len) {
+    return part1(std::span<const char>(input, input_len));
 }
-size_t part2_c(char *input, size_t input_len) {
-    return part2(std::span<char>(input, input_len));
+size_t part2_c(const char *input, size_t input_len) {
+    return part2(std::span<const char>(input, input_len));
 }
 }
+
+// given a span of chars, create an iterator that emits all lines separated by the newline character
+
+template <typename T> class line_iterator {
+    T begin_;
+    T end_;
+    char delim_;
+
+  public:
+    line_iterator(T begin, T end, char delim) : begin_(begin), end_(end), delim_(delim) {}
+
+    class iterator {
+        T begin_;
+        T end_;
+        char delim_;
+
+      public:
+        iterator(T begin, T end, char delim) : begin_(begin), end_(end), delim_(delim) {}
+
+        iterator &operator++() {
+            begin_ = std::find(begin_, end_, delim_);
+            if (begin_ != end_) {
+                ++begin_;
+            }
+            return *this;
+        }
+
+        std::string_view operator*() {
+            auto end = std::find(begin_, end_, delim_);
+            return std::string_view(&*begin_, end - begin_);
+        }
+
+        bool operator!=(const iterator &other) { return begin_ != other.begin_; }
+    };
+
+    iterator begin() { return iterator(begin_, end_, delim_); }
+    iterator end() { return iterator(end_, end_, delim_); }
+}; 
