@@ -4,12 +4,16 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-rayon = "1.5.1"
+rayon = "1.10.0"
 ahash = "0.8.11"
+link-cplusplus = "1.0.9"
 
 [dev-dependencies]
 criterion = "0.5.1"
 divan = "0.1.14"
+
+[build-dependencies]
+cmake = "0.1.50"
 
 [[bench]]
 name = "criterion"

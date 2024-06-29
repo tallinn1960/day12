@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.5)
+project(day12 CXX)
+set(CMAKE_CXX_STANDARD 20)
+add_library(day12cpp STATIC lib.cpp)
+add_executable(day12 main.cpp)
+target_link_libraries(day12 day12cpp)
+install(TARGETS day12cpp DESTINATION .)

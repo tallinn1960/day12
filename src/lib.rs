@@ -1,3 +1,5 @@
+pub mod cpp;
+
 // BTreeMap is slightly slower here
 use std::str::FromStr;
 
@@ -150,6 +152,19 @@ mod tests {
 ????.######..#####. 1,6,5
 ?###???????? 3,2,1";
         let result = p1(input);
+        assert_eq!(result, 21);
+    }
+
+    #[test]
+    fn test_part1_cpp_sample() {
+        let input = "???.### 1,1,3
+.??..??...?##. 1,1,3
+?#?#?#?#?#?#?#? 1,3,1,6
+????.#...#... 4,1,1
+????.######..#####. 1,6,5
+?###???????? 3,2,1
+";
+        let result = cpp::p1(input);
         assert_eq!(result, 21);
     }
 
