@@ -1,4 +1,5 @@
 #include <charconv>
+#include <numeric>
 #include <span>
 #include <string_view>
 #include <strstream>
@@ -106,11 +107,12 @@ template <typename T> class line_iterator {
 };
 
 size_t part1(std::string_view input) {
-    size_t res = 0;
-    for (auto l : line_iterator(input.begin(), input.end(), '\n')) {
-        auto [pattern, groups] = parse(l);
-        res += count(pattern, groups);
-    }
+    auto it = line_iterator(input.begin(), input.end(), '\n');
+    size_t res = std::reduce(it.begin(), it.end(), 0,
+                [](size_t acc, std::string_view l) {
+                    auto [pattern, groups] = parse(l);
+                    return acc + count(pattern, groups);
+                });
     return res;
 }
 
