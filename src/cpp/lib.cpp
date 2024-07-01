@@ -146,14 +146,14 @@ size_t part1(std::string_view input) {
     return res;
 }
 
-void join(const std::string_view &in, size_t n, char c, std::string &s) {
-    s.clear();
-
+std::string join(const std::string_view &in, size_t n, char c) {
+    std::string s;
     for (int i = 0; i < n; ++i) {
         s += in;
         if (i < n - 1)
             s += c;
     }
+    return s;
 }
 
 size_t part2(std::string_view input) {
@@ -165,8 +165,7 @@ size_t part2(std::string_view input) {
         std::plus{}, [](std::string_view l) {
             auto [pattern, groups] = parse(l);
             // join pattern five times into a string by ?
-            std::string repeated_pattern;
-            join(pattern, (size_t)5, '?', repeated_pattern);
+            std::string repeated_pattern = join(pattern, (size_t)5, '?');
             // create a groups array with 5 repetitions of the original group
             std::vector<size_t> repeated_groups;
             repeated_groups.reserve(groups.size() * 5);
