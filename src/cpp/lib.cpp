@@ -131,32 +131,115 @@ size_t part1(std::string_view input) {
     return res;
 }
 
+struct custom_key {
+    std::string_view pattern;
+    std::span<size_t> groups;
+    bool operator==(const custom_key &other) const {
+        return pattern == other.pattern &&
+               std::equal(groups.begin(), groups.end(), other.groups.begin(),
+                          other.groups.end());
+    }
+};
+
+template <> struct std::hash<custom_key> {
+    std::size_t operator()(const custom_key &k) const {
+        using std::hash;
+        using std::size_t;
+        using std::string_view;
+
+        return ((hash<string_view>()(k.pattern) ^
+                 (hash<size_t>()(k.groups.size()) << 1)) >>
+                1) ^
+               (hash<size_t>()(k.groups[0]) << 1);
+    }
+};
+
+inline custom_key make_key(const std::string_view &s,
+                           const std::span<size_t> &t) {
+    return {s, t};
+}
+
+size_t count_with_cache(std::unordered_map<custom_key, size_t> &cache,
+                        const std::string_view &pattern,
+                        const std::span<size_t> &groups) {
+    if (pattern.empty()) {
+        if (groups.empty()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    if (groups.empty()) {
+        if (pattern.find('#') != std::string::npos) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    custom_key key = make_key(pattern, groups);
+    auto it = cache.find(key);
+    if (it != cache.end()) {
+        return it->second;
+    }
+
+    size_t res = 0;
+    char c = pattern[0];
+
+    if (c == '.' || c == '?') {
+        res += count_with_cache(cache, pattern.substr(1), groups);
+    }
+
+    if ((c == '#' || c == '?') && (groups[0] <= pattern.size()) &&
+        (pattern.substr(0, groups[0]).find('.') == std::string::npos) &&
+        (groups[0] == pattern.size() || pattern[groups[0]] != '#')) {
+        if (groups[0] == pattern.size()) {
+            res += count_with_cache(
+                cache, "", std::span(groups.begin() + 1, groups.end()));
+        } else {
+
+            res +=
+                count_with_cache(cache, pattern.substr(groups[0] + 1),
+                                 std::span(groups.begin() + 1, groups.end()));
+        }
+    }
+    cache[key] = res;
+    return res;
+}
+
+size_t count_part2(const std::string_view &pattern,
+                   const std::span<size_t> &groups) {
+    // join pattern five times into a string by ?
+    std::string repeated_pattern;
+    repeated_pattern.reserve(pattern.size() * 5);
+    for (size_t i = 0; i < 5; i++) {
+        repeated_pattern.append(pattern);
+        repeated_pattern.push_back('?');
+    }
+    repeated_pattern.pop_back();
+    // create a groups array with 5 repetitions of the original group
+    std::vector<size_t> repeated_groups;
+    repeated_groups.reserve(groups.size() * 5);
+    for (size_t i = 0; i < 5; i++) {
+        repeated_groups.insert(repeated_groups.end(), groups.begin(),
+                               groups.end());
+    }
+    std::unordered_map<custom_key, size_t> cache;
+    return count_with_cache(cache, repeated_pattern, repeated_groups);
+}
+
 size_t part2(std::string_view input) {
     auto it = line_iterator(input.begin(), input.end(), '\n');
     std::vector<std::string_view> vec;
     for (auto l : it) {
         vec.push_back(l);
     }
-    size_t res = std::transform_reduce(
-        std::execution::par_unseq, vec.cbegin(), vec.cend(), 0, std::plus{},
-        [](std::string_view l) {
-            auto [pattern, groups] = parse(l);
-            // join pattern five times into a string by ?
-            std::string pattern2;
-            pattern2.reserve(pattern.size() * 5);
-            for (size_t i = 0; i < 5; i++) {
-                pattern2.append(pattern);
-                pattern2.push_back('?');
-            }
-            pattern2.pop_back();
-            // create a groups array with 5 repetitions of the original group
-            std::vector<size_t> groups2;
-            groups2.reserve(groups.size() * 5);
-            for (size_t i = 0; i < 5; i++) {
-                groups2.insert(groups2.end(), groups.begin(), groups.end());
-            }
-            return count(pattern2, groups2);
-        });
+    size_t res = std::transform_reduce(std::execution::par_unseq, vec.cbegin(),
+                                       vec.cend(), (size_t)0, std::plus{},
+                                       [](std::string_view l) {
+                                           auto [pattern, groups] = parse(l);
+                                           return count_part2(pattern, groups);
+                                       });
     return res;
 }
 
