@@ -1,13 +1,13 @@
+#include <algorithm>
 #include <charconv>
+#include <execution>
 #include <iterator>
+#include <numeric>
 #include <span>
 #include <string>
 #include <string_view>
 #include <tuple>
 #include <vector>
-#include <execution>
-#include <algorithm>
-#include <numeric>
 
 std::tuple<std::string_view, std::vector<size_t>> parse(std::string_view line) {
 
@@ -118,7 +118,12 @@ template <typename T> class line_iterator {
 
 size_t part1(std::string_view input) {
     auto it = line_iterator(input.begin(), input.end(), '\n');
-    size_t res = std::transform_reduce(it.begin(), it.end(), 0, std::plus{},
+    std::vector<std::string_view> vec;
+    for (auto l : it) {
+        vec.push_back(l);
+    }
+    size_t res = std::transform_reduce(std::execution::par_unseq, vec.cbegin(),
+                                       vec.cend(), 0, std::plus{},
                                        [](std::string_view l) {
                                            auto [pattern, groups] = parse(l);
                                            return count(pattern, groups);
@@ -126,7 +131,34 @@ size_t part1(std::string_view input) {
     return res;
 }
 
-size_t part2(std::string_view input) { return 0; }
+size_t part2(std::string_view input) {
+    auto it = line_iterator(input.begin(), input.end(), '\n');
+    std::vector<std::string_view> vec;
+    for (auto l : it) {
+        vec.push_back(l);
+    }
+    size_t res = std::transform_reduce(
+        std::execution::par_unseq, vec.cbegin(), vec.cend(), 0, std::plus{},
+        [](std::string_view l) {
+            auto [pattern, groups] = parse(l);
+            // join pattern five times into a string by ?
+            std::string pattern2;
+            pattern2.reserve(pattern.size() * 5);
+            for (size_t i = 0; i < 5; i++) {
+                pattern2.append(pattern);
+                pattern2.push_back('?');
+            }
+            pattern2.pop_back();
+            // create a groups array with 5 repetitions of the original group
+            std::vector<size_t> groups2;
+            groups2.reserve(groups.size() * 5);
+            for (size_t i = 0; i < 5; i++) {
+                groups2.insert(groups2.end(), groups.begin(), groups.end());
+            }
+            return count(pattern2, groups2);
+        });
+    return res;
+}
 
 extern "C" {
 size_t part1_c(const char *input, size_t input_len) {

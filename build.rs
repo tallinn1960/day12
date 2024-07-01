@@ -5,6 +5,7 @@ fn main() {
 
     println!("cargo:rustc-link-search=native={}", dst.display());
     println!("cargo:rustc-link-lib=static=day12cpp");
+    println!("cargo:rustc-link-lib=dylib=tbb");
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=CMakeLists.txt");
     println!("cargo:rerun-if-changed=cpp/lib.cpp");
