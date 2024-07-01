@@ -17,17 +17,6 @@ pub fn p1(input: &str) -> u64 {
         .sum::<u64>()
 }
 
-pub fn p1_single_threaded(input: &str) -> u64 {
-    input
-        .lines()
-        .map(parse)
-        .map(|(pattern, groups)| {
-            // part1 is solved much faster without an cache
-            count(&mut NoCache::default(), pattern, &groups) as u64
-        })
-        .sum::<u64>()
-}
-
 pub fn p2(input: &str) -> u64 {
     input
         .par_lines()
@@ -72,11 +61,12 @@ trait CacheStorage<'a>: Default {
     fn insert(&mut self, key: (&'a str, &'a [usize]), value: usize);
 }
 
-fn count<'a>(
-    cache: &mut impl CacheStorage<'a>,
+fn count<'a, C: CacheStorage<'a>>(
+    cache: &mut C,
     pattern: &'a str,
     groups: &'a [usize],
-) -> usize {
+) 
+-> usize {
     // uses recursion, but stack usage per call is low and depth is
     // limited by the length of the pattern
     if pattern.is_empty() {
@@ -148,10 +138,12 @@ struct Cache<'a> {
 }
 
 impl<'a> CacheStorage<'a> for Cache<'a> {
+    #[inline]
     fn get(&self, key: &(&str, &[usize])) -> Option<usize> {
         self.cache.get(key).copied()
     }
 
+    #[inline]
     fn insert(&mut self, key: (&'a str, &'a [usize]), value: usize) {
         self.cache.insert(key, value);
     }
@@ -187,18 +179,6 @@ mod tests {
     }
 
     #[test]
-    fn test_part2_sample() {
-        let input = "???.### 1,1,3
-.??..??...?##. 1,1,3
-?#?#?#?#?#?#?#? 1,3,1,6
-????.#...#... 4,1,1
-????.######..#####. 1,6,5
-?###???????? 3,2,1";
-        let result = p2(input);
-        assert_eq!(result, 525152);
-    }
-
-    #[test]
     fn test_part1() {
         let input = include_str!("../input.txt");
         let result = p1(input);
@@ -213,22 +193,34 @@ mod tests {
     }
 
     #[test]
+    fn test_part2_sample() {
+        let input = "???.### 1,1,3
+        .??..??...?##. 1,1,3
+        ?#?#?#?#?#?#?#? 1,3,1,6
+        ????.#...#... 4,1,1
+        ????.######..#####. 1,6,5
+        ?###???????? 3,2,1";
+        let result = p2(input);
+        assert_eq!(result, 525152);
+    }
+
+    #[test]
+    fn test_part2_cpp_sample() {
+        let input = "???.### 1,1,3
+    .??..??...?##. 1,1,3
+    ?#?#?#?#?#?#?#? 1,3,1,6
+    ????.#...#... 4,1,1
+    ????.######..#####. 1,6,5
+    ?###???????? 3,2,1";
+        let result = cpp::p2(input);
+        assert_eq!(result, 525152);
+    }
+
+    #[test]
     fn test_part2() {
         let input = include_str!("../input.txt");
         let result = p2(input);
         assert_eq!(result, 7139671893722);
-    }
-
-    #[test]
-    fn test_part2_sample_cpp() {
-        let input = "???.### 1,1,3
-.??..??...?##. 1,1,3
-?#?#?#?#?#?#?#? 1,3,1,6
-????.#...#... 4,1,1
-????.######..#####. 1,6,5
-?###???????? 3,2,1";
-        let result = cpp::p2(input);
-        assert_eq!(result, 525152);
     }
 
     #[test]
