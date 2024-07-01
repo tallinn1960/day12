@@ -35,19 +35,19 @@ func parse(data: Data) -> [oneLine] {
 
 func count(pattern: any StringProtocol, groups: ArraySlice<Int>) -> Int {
     if pattern.isEmpty {
-        if groups.isEmpty { 
-            return 1 
-            } else { 
-                return 0 
-                }
+        if groups.isEmpty {
+            return 1
+        } else {
+            return 0
+        }
     }
 
     if groups.isEmpty {
-        if pattern.firstIndex(of: "#") != nil { 
-            return 0 
-            } else { 
-                return 1 
-                }
+        if pattern.firstIndex(of: "#") != nil {
+            return 0
+        } else {
+            return 1
+        }
     }
 
     var result = 0;
@@ -58,9 +58,9 @@ func count(pattern: any StringProtocol, groups: ArraySlice<Int>) -> Int {
 
     let g0 = groups.first!
     if pattern.first == "#" || pattern.first == "?" {
-        if g0 <= pattern.count &&
-        (pattern.prefix(g0).firstIndex(of: ".") == nil) && 
-        (pattern.count == g0 || pattern.prefix(g0).last! != "#") { 
+        if g0 <= pattern.count && (pattern.prefix(g0).firstIndex(of: ".") == nil)
+            && (pattern.count == g0 || pattern.prefix(g0).last! != "#")
+        {
             result += count(pattern: pattern.dropFirst(g0), groups: groups.dropFirst())
         }
     }
