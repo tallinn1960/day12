@@ -1,11 +1,13 @@
 #include <charconv>
-#include <numeric>
+#include <iterator>
 #include <span>
+#include <string>
 #include <string_view>
-#include <strstream>
 #include <tuple>
 #include <vector>
+#include <execution>
 #include <algorithm>
+#include <numeric>
 
 std::tuple<std::string_view, std::vector<size_t>> parse(std::string_view line) {
 
@@ -69,14 +71,14 @@ size_t count(const std::string_view &pattern, const std::span<size_t> &groups) {
     return res;
 }
 
-
 template <typename T> class line_iterator {
     T begin_;
     T end_;
     char delim_;
 
   public:
-    line_iterator(T begin, T end, char delim) : begin_(begin), end_(end), delim_(delim) {}
+    line_iterator(T begin, T end, char delim)
+        : begin_(begin), end_(end), delim_(delim) {}
 
     class iterator {
         T begin_;
@@ -84,7 +86,13 @@ template <typename T> class line_iterator {
         char delim_;
 
       public:
-        iterator(T begin, T end, char delim) : begin_(begin), end_(end), delim_(delim) {}
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = T *;
+        using difference_type = size_t;
+        using pointer_ = T *;
+        using reference = T &;
+        iterator(T begin, T end, char delim)
+            : begin_(begin), end_(end), delim_(delim) {}
 
         iterator &operator++() {
             begin_ = std::find(begin_, end_, delim_);
@@ -99,7 +107,9 @@ template <typename T> class line_iterator {
             return std::string_view(&*begin_, end - begin_);
         }
 
-        bool operator!=(const iterator &other) { return begin_ != other.begin_; }
+        bool operator!=(const iterator &other) {
+            return begin_ != other.begin_;
+        }
     };
 
     iterator begin() { return iterator(begin_, end_, delim_); }
@@ -108,11 +118,11 @@ template <typename T> class line_iterator {
 
 size_t part1(std::string_view input) {
     auto it = line_iterator(input.begin(), input.end(), '\n');
-    size_t res = std::reduce(it.begin(), it.end(), 0,
-                [](size_t acc, std::string_view l) {
-                    auto [pattern, groups] = parse(l);
-                    return acc + count(pattern, groups);
-                });
+    size_t res = std::transform_reduce(it.begin(), it.end(), 0, std::plus{},
+                                       [](std::string_view l) {
+                                           auto [pattern, groups] = parse(l);
+                                           return count(pattern, groups);
+                                       });
     return res;
 }
 
@@ -125,4 +135,4 @@ size_t part1_c(const char *input, size_t input_len) {
 size_t part2_c(const char *input, size_t input_len) {
     return part2(std::string_view(input, input_len));
 }
-} 
+}

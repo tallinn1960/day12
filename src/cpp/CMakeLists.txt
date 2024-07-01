@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(day12 CXX)
 set(CMAKE_CXX_STANDARD 23)
+find_package(TBB)
 add_library(day12cpp STATIC lib.cpp)
 install(TARGETS day12cpp DESTINATION .)
+add_executable(day12 main.cpp)
+target_link_libraries(day12 day12cpp TBB::tbb)
