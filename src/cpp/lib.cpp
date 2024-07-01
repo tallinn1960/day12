@@ -1,14 +1,15 @@
+#include <string_view>
 #include <algorithm>
 #include <charconv>
+#include <concepts>
 #include <execution>
 #include <iterator>
 #include <numeric>
 #include <span>
 #include <string>
-#include <string_view>
 #include <tuple>
 #include <vector>
-#include <concepts>
+
 #include "cache.hpp"
 
 template <typename T> class line_iterator {
@@ -82,9 +83,8 @@ std::tuple<std::string_view, std::vector<size_t>> parse(std::string_view line) {
     return std::make_tuple(pattern, vec);
 }
 
-
 template <typename T>
-requires std::derived_from<T, CacheProtocol>
+    requires std::derived_from<T, CacheProtocol>
 size_t count_with_cache(T &cache, const std::string_view &pattern,
                         const std::span<size_t> &groups) {
     if (pattern.empty()) {

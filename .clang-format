@@ -1,2 +1,13 @@
 IndentWidth: 4
 ColumnLimit: 80
+IncludeCategories:
+  - Regex:           '^((<|")(gtest|gmock|isl|json)/)'
+    Priority:        3
+  - Regex:           '<[[:alnum:].]+>'
+    Priority:        2
+  - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
+    Priority:        4
+    CaseSensitive:   true
+  - Regex:           '.*'
+    Priority:        1
+    SortPriority:    0
