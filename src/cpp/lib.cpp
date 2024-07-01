@@ -8,6 +8,7 @@
 #include <string_view>
 #include <tuple>
 #include <vector>
+#include <concepts>
 #include "cache.hpp"
 
 template <typename T> class line_iterator {
@@ -81,8 +82,10 @@ std::tuple<std::string_view, std::vector<size_t>> parse(std::string_view line) {
     return std::make_tuple(pattern, vec);
 }
 
-size_t count_with_cache(CacheProtocol &cache,
-                        const std::string_view &pattern,
+
+template <typename T>
+requires std::derived_from<T, CacheProtocol>
+size_t count_with_cache(T &cache, const std::string_view &pattern,
                         const std::span<size_t> &groups) {
     if (pattern.empty()) {
         if (groups.empty()) {
@@ -132,52 +135,48 @@ size_t count_with_cache(CacheProtocol &cache,
 size_t part1(std::string_view input) {
     auto it = line_iterator(input.begin(), input.end(), '\n');
     std::vector<std::string_view> vec;
-    for (auto l : it) {
-        vec.push_back(l);
-    }
-    size_t res = std::transform_reduce(std::execution::par_unseq, vec.cbegin(),
-                                       vec.cend(), 0, std::plus{},
-                                       [](std::string_view l) {
-                                           auto [pattern, groups] = parse(l);
-                                           NoCache cache;
-                                           return count_with_cache(cache, pattern, groups);
-                                       });
+    vec.insert(vec.begin(), it.begin(), it.end());
+    size_t res = std::transform_reduce(
+        std::execution::par_unseq, vec.cbegin(), vec.cend(), 0, std::plus{},
+        [](std::string_view l) {
+            auto [pattern, groups] = parse(l);
+            NoCache cache;
+            return count_with_cache(cache, pattern, groups);
+        });
     return res;
 }
 
-size_t count_part2(const std::string_view &pattern,
-                   const std::span<size_t> &groups) {
-    // join pattern five times into a string by ?
-    std::string repeated_pattern;
-    repeated_pattern.reserve(pattern.size() * 5);
-    for (size_t i = 0; i < 5; i++) {
-        repeated_pattern.append(pattern);
-        repeated_pattern.push_back('?');
+void join(const std::string_view &in, size_t n, char c, std::string &s) {
+    s.clear();
+
+    for (int i = 0; i < n; ++i) {
+        s += in;
+        if (i < n - 1)
+            s += c;
     }
-    repeated_pattern.pop_back();
-    // create a groups array with 5 repetitions of the original group
-    std::vector<size_t> repeated_groups;
-    repeated_groups.reserve(groups.size() * 5);
-    for (size_t i = 0; i < 5; i++) {
-        repeated_groups.insert(repeated_groups.end(), groups.begin(),
-                               groups.end());
-    }
-    Cache cache;
-    return count_with_cache(cache, repeated_pattern, repeated_groups);
 }
 
 size_t part2(std::string_view input) {
     auto it = line_iterator(input.begin(), input.end(), '\n');
     std::vector<std::string_view> vec;
-    for (auto l : it) {
-        vec.push_back(l);
-    }
-    size_t res = std::transform_reduce(std::execution::par_unseq, vec.cbegin(),
-                                       vec.cend(), (size_t)0, std::plus{},
-                                       [](std::string_view l) {
-                                           auto [pattern, groups] = parse(l);
-                                           return count_part2(pattern, groups);
-                                       });
+    vec.insert(vec.begin(), it.begin(), it.end());
+    size_t res = std::transform_reduce(
+        std::execution::par_unseq, vec.cbegin(), vec.cend(), (size_t)0,
+        std::plus{}, [](std::string_view l) {
+            auto [pattern, groups] = parse(l);
+            // join pattern five times into a string by ?
+            std::string repeated_pattern;
+            join(pattern, (size_t)5, '?', repeated_pattern);
+            // create a groups array with 5 repetitions of the original group
+            std::vector<size_t> repeated_groups;
+            repeated_groups.reserve(groups.size() * 5);
+            for (size_t i = 0; i < 5; i++) {
+                repeated_groups.insert(repeated_groups.end(), groups.begin(),
+                                       groups.end());
+            }
+            Cache cache;
+            return count_with_cache(cache, repeated_pattern, repeated_groups);
+        });
     return res;
 }
 

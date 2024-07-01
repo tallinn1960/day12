@@ -19,3 +19,17 @@ fn part2() {
         "../input.txt",
     )));
 }
+
+#[divan::bench]
+fn part1_cpp() {
+    day12::cpp::p1(divan::black_box(include_str!(
+        "../input.txt",
+    )));
+}
+
+#[divan::bench]
+fn part2_cpp() {
+    day12::cpp::p2(divan::black_box(include_str!(
+        "../input.txt",
+    )));
+}

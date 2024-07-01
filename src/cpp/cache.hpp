@@ -3,7 +3,7 @@
 #include <optional>
 #include <span>
 #include <string_view>
-
+#include <unordered_map>
 struct custom_key {
     std::string_view pattern;
     std::span<size_t> groups;
@@ -33,7 +33,7 @@ inline custom_key make_key(const std::string_view &s,
 }
 
 class CacheProtocol {
-    public:
+  public:
     virtual std::optional<size_t> get(const custom_key &key) = 0;
     virtual void set(const custom_key &key, size_t value) = 0;
 };
@@ -41,6 +41,7 @@ class CacheProtocol {
 class Cache : public CacheProtocol {
     std::unordered_map<custom_key, size_t> cache;
 
+  public:
     std::optional<size_t> get(const custom_key &key) override {
         auto it = cache.find(key);
         if (it != cache.end()) {
@@ -55,9 +56,10 @@ class Cache : public CacheProtocol {
 };
 
 class NoCache : public CacheProtocol {
+  public:
     std::optional<size_t> get(const custom_key &key) override {
         return std::nullopt;
     }
 
     void set(const custom_key &key, size_t value) override {}
-};   
+};
