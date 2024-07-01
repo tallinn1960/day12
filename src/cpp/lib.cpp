@@ -87,11 +87,12 @@ template <typename T> class line_iterator {
 
       public:
         using iterator_category = std::forward_iterator_tag;
-        using value_type = T *;
+        using value_type = T;
         using difference_type = size_t;
-        using pointer_ = T *;
+        using pointer = T *;
         using reference = T &;
-        iterator(T begin, T end, char delim)
+
+        explicit iterator(T begin, T end, char delim)
             : begin_(begin), end_(end), delim_(delim) {}
 
         iterator &operator++() {
