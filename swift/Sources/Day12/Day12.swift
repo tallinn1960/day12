@@ -57,13 +57,20 @@ func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice
         result += count(&cache, pattern: pattern.dropFirst(), groups: groups)
     }
 
-    let g0 = groups.first!
-    if (pattern.first == "#" || pattern.first == "?")
-        && g0 <= pattern.count
-        && !pattern.prefix(g0).contains(".")
-        && (pattern.count == g0 || pattern.prefix(g0 + 1).last! != "#")
-    {
-        result += count(&cache, pattern: pattern.dropFirst(g0 + 1), groups: groups.dropFirst())
+    if (pattern.first == "#" || pattern.first == "?") {
+        let g0 = groups.first!
+        let match = pattern.prefix(g0)
+        let trail = pattern.dropFirst(g0)
+        if g0 == match.count
+            && !match.contains(".")
+            && (trail.isEmpty || trail.first! != "#")
+        {
+            // match is a valid group of g0 defective springs 
+            // handle the trail with the remaining groups
+            // skip the first char of trail as that ends
+            // the current group and is already matched
+            result += count(&cache, pattern: trail.dropFirst(), groups: groups.dropFirst())
+        }
     }
 
     cache[key] = result
