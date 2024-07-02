@@ -57,14 +57,13 @@ func count(pattern: Substring, groups: ArraySlice<Int>) -> Int {
     }
 
     let g0 = groups.first!
-    if (pattern.first == "#" || pattern.first == "?") 
-    && g0 <= pattern.count 
-    && pattern.prefix(g0).firstIndex(of: ".") == nil
-    && (pattern.count == g0 || pattern.prefix(g0 + 1).last! != "#")
-        {
-            result += count(pattern: pattern.dropFirst(g0 + 1), groups: groups.dropFirst())
-        }
-    
+    if (pattern.first == "#" || pattern.first == "?")
+        && g0 <= pattern.count
+        && pattern.prefix(g0).firstIndex(of: ".") == nil
+        && (pattern.count == g0 || pattern.prefix(g0 + 1).last! != "#")
+    {
+        result += count(pattern: pattern.dropFirst(g0 + 1), groups: groups.dropFirst())
+    }
 
     return result;
 }
@@ -76,7 +75,7 @@ func part1(data: Data) -> Int {
 
     DispatchQueue.concurrentPerform(iterations: parsed.count) { i in
         let it = count(pattern: parsed[i].pattern[...], groups: ArraySlice(parsed[i].groups))
-        syncQueue.sync {result += it}
+        syncQueue.sync { result += it }
     }
 
     return result
