@@ -4,7 +4,7 @@ import Foundation
 
 struct OneLine {
     let pattern: Substring
-    let groups: [Int]
+    let groups: ArraySlice<Int>
 }
 
 extension OneLine: Hashable {
@@ -26,7 +26,7 @@ extension OneLine: Equatable {
 func parse(line: Substring) -> OneLine {
     let parts = line.components(separatedBy: " ")
     let numbers = parts[1].components(separatedBy: ",").compactMap { Int($0) }
-    return OneLine(pattern: parts[0][...], groups: numbers)
+    return OneLine(pattern: parts[0][...], groups: numbers[...])
 }
 
 func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice<Int>) -> Int {
@@ -46,7 +46,7 @@ func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice
         }
     }
 
-    let key = OneLine(pattern: pattern, groups: Array(groups))
+    let key = OneLine(pattern: pattern, groups: groups)
     if let cached = cache[key] {
         return cached
     }
