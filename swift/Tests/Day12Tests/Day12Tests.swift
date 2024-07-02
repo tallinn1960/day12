@@ -2,9 +2,11 @@ import XCTest
 @testable import Day12
 
 final class Day12Tests: XCTestCase {
-    func test_oneLine() {
-        let line = oneLine(pattern: "???.###", groups: [1, 1, 3])
-        let result = count(pattern: line.pattern[...], groups: line.groups[...])
+    func test_OneLine() {
+        let line = OneLine(pattern: "???.###", groups: [1, 1, 3])
+                        var cache : [OneLine : Int] = [:]
+
+        let result = count(&cache, pattern: line.pattern[...], groups: line.groups[...])
         XCTAssertEqual(1, result)
     }
 
@@ -23,34 +25,65 @@ final class Day12Tests: XCTestCase {
         XCTAssertEqual(
             parsed,
             [
-                oneLine(pattern: "???.###", groups: [1, 1, 3]),
-                oneLine(pattern: ".??..??...?##.", groups: [1, 1, 3]),
-                oneLine(pattern: "?#?#?#?#?#?#?#?", groups: [1, 3, 1, 6]),
-                oneLine(pattern: "????.#...#...", groups: [4, 1, 1]),
-                oneLine(pattern: "????.######..#####.", groups: [1, 6, 5]),
-                oneLine(pattern: "?###????????", groups: [3, 2, 1]),
+                OneLine(pattern: "???.###", groups: [1, 1, 3]),
+                OneLine(pattern: ".??..??...?##.", groups: [1, 1, 3]),
+                OneLine(pattern: "?#?#?#?#?#?#?#?", groups: [1, 3, 1, 6]),
+                OneLine(pattern: "????.#...#...", groups: [4, 1, 1]),
+                OneLine(pattern: "????.######..#####.", groups: [1, 6, 5]),
+                OneLine(pattern: "?###????????", groups: [3, 2, 1]),
             ])
 
+                var cache : [OneLine : Int] = [:]
+
         let result = parsed.map { line in
-            return count(pattern: line.pattern[...], groups: ArraySlice(line.groups))
+            return count(&cache, pattern: line.pattern[...], groups: ArraySlice(line.groups))
         }.reduce(0, +)
         XCTAssertEqual(result, 21)
     }
+
+    func test_part2() {
+        let data = """
+            ???.### 1,1,3
+            .??..??...?##. 1,1,3
+            ?#?#?#?#?#?#?#? 1,3,1,6
+            ????.#...#... 4,1,1
+            ????.######..#####. 1,6,5
+            ?###???????? 3,2,1
+            """.data(using: .utf8)!
+            let result = part2(data: data)
+            XCTAssertEqual(result, 525152)
+    }
+
 }
 
 final class Day12Performance: XCTestCase {
     func test_part1() {
         let data = try! Data(contentsOf: URL(fileURLWithPath: "../input.txt"))
         #if os(macOS)
-        measure(metrics: [XCTClockMetric(), XCTCPUMetric(), XCTMemoryMetric()]) {
-            let result = part1(data: data)
-            XCTAssertEqual(result, 7221)
-        }
-        #else 
-        measure {
-            let result = part1(data: data)
-            XCTAssertEqual(result, 7221)
-        }
+            measure(metrics: [XCTClockMetric(), XCTCPUMetric(), XCTMemoryMetric()]) {
+                let result = part1(data: data)
+                XCTAssertEqual(result, 7221)
+            }
+        #else
+            measure {
+                let result = part1(data: data)
+                XCTAssertEqual(result, 7221)
+            }
+        #endif
+    }
+
+        func test_part2() {
+        let data = try! Data(contentsOf: URL(fileURLWithPath: "../input.txt"))
+        #if os(macOS)
+            measure(metrics: [XCTClockMetric(), XCTCPUMetric(), XCTMemoryMetric()]) {
+                let result = part2(data: data)
+                XCTAssertEqual(result, 7139671893722)
+            }
+        #else
+            measure {
+                let result = part2(data: data)
+                XCTAssertEqual(result, 7139671893722)
+            }
         #endif
     }
 }

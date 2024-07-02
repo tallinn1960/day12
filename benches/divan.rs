@@ -33,3 +33,17 @@ fn part2_cpp() {
         "../input.txt",
     )));
 }
+
+#[divan::bench]
+fn part1_swift() {
+    day12::swift::p1(divan::black_box(include_str!(
+        "../input.txt",
+    )));
+}
+
+#[divan::bench]
+fn part2_swift() {
+    day12::swift::p2(divan::black_box(include_str!(
+        "../input.txt",
+    )));
+}
