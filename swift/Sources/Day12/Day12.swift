@@ -33,7 +33,7 @@ func parse(data: Data) -> [oneLine] {
     }
 }
 
-func count(pattern: any StringProtocol, groups: ArraySlice<Int>) -> Int {
+func count(pattern: Substring, groups: ArraySlice<Int>) -> Int {
     if pattern.isEmpty {
         if groups.isEmpty {
             return 1
@@ -75,7 +75,7 @@ func part1(data: Data) -> Int {
     let syncQueue = DispatchQueue(label: "syncQueue")
 
     DispatchQueue.concurrentPerform(iterations: parsed.count) { i in
-        let it = count(pattern: parsed[i].pattern, groups: ArraySlice(parsed[i].groups))
+        let it = count(pattern: parsed[i].pattern[...], groups: ArraySlice(parsed[i].groups))
         syncQueue.sync {result += it}
     }
 
