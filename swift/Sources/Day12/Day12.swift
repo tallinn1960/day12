@@ -51,21 +51,21 @@ func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice
         return cached
     }
 
-    var result = 0;
+    var result = 0
 
     if pattern.first == "." || pattern.first == "?" {
         result += count(&cache, pattern: pattern.dropFirst(), groups: groups)
     }
 
-    if (pattern.first == "#" || pattern.first == "?") {
-        let g0 = groups.first!
-        let match = pattern.prefix(g0)
-        let trail = pattern.dropFirst(g0)
-        if g0 == match.count
+    if pattern.first == "#" || pattern.first == "?" {
+        let nextGroup = groups.first!
+        let match = pattern.prefix(nextGroup)
+        let trail = pattern.dropFirst(nextGroup)
+        if nextGroup == match.count
             && !match.contains(".")
             && (trail.isEmpty || trail.first! != "#")
         {
-            // match is a valid group of g0 defective springs 
+            // match is a valid group of g0 defective springs
             // handle the trail with the remaining groups
             // skip the first char of trail as that ends
             // the current group and is already matched
@@ -74,7 +74,7 @@ func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice
     }
 
     cache[key] = result
-    return result;
+    return result
 }
 
 public func part1(data: Data) -> Int {
@@ -82,12 +82,13 @@ public func part1(data: Data) -> Int {
     var result = 0
     let syncQueue = DispatchQueue(label: "syncQueue")
 
-    DispatchQueue.concurrentPerform(iterations: lines.count) { i in
-        if lines[i].isEmpty { return }
-        let parsed = parse(line: lines[i])
+    DispatchQueue.concurrentPerform(iterations: lines.count) { index in
+        if lines[index].isEmpty { return }
+        let parsed = parse(line: lines[index])
         var cache: [OneLine: Int] = [:]
-        let it = count(&cache, pattern: parsed.pattern[...], groups: ArraySlice(parsed.groups))
-        syncQueue.sync { result += it }
+        let patternMatches = count(
+            &cache, pattern: parsed.pattern[...], groups: ArraySlice(parsed.groups))
+        syncQueue.sync { result += patternMatches }
     }
 
     return result
@@ -98,15 +99,15 @@ public func part2(data: Data) -> Int {
     var result = 0
     let syncQueue = DispatchQueue(label: "syncQueue")
 
-    DispatchQueue.concurrentPerform(iterations: lines.count) { i in
-        if lines[i].isEmpty { return }
-        let parsed = parse(line: lines[i])
+    DispatchQueue.concurrentPerform(iterations: lines.count) { index in
+        if lines[index].isEmpty { return }
+        let parsed = parse(line: lines[index])
         let pattern = (0..<5).map { _ in parsed.pattern }.joined(separator: "?")
         let groups = (0..<5).flatMap { _ in parsed.groups }
         var cache: [OneLine: Int] = [:]
 
-        let it = count(&cache, pattern: pattern[...], groups: ArraySlice(groups))
-        syncQueue.sync { result += it }
+        let patternMatches = count(&cache, pattern: pattern[...], groups: ArraySlice(groups))
+        syncQueue.sync { result += patternMatches }
     }
 
     return result

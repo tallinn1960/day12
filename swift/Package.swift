@@ -10,7 +10,7 @@ let package = Package(
         .library(
             name: "Day12",
             targets: ["Day12"]),
-        .executable(name: "Day12Exe", targets: ["Day12Exe"])
+        .executable(name: "Day12Exe", targets: ["Day12Exe"]),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
