@@ -4,7 +4,7 @@ import XCTest
 final class Day12Tests: XCTestCase {
     func test_oneLine() {
         let line = oneLine(pattern: "???.###", groups: [1, 1, 3])
-        let result = count(pattern: line.pattern[...], groups: ArraySlice(line.groups))
+        let result = count(pattern: line.pattern[...], groups: line.groups[...])
         XCTAssertEqual(1, result)
     }
 
@@ -18,7 +18,8 @@ final class Day12Tests: XCTestCase {
             ?###???????? 3,2,1
             """.data(using: .utf8)!
 
-        let parsed = parse(data: data)
+        let parsed = String(data: data, encoding: .utf8)!.components(separatedBy: "\n").map(parse)
+
         XCTAssertEqual(
             parsed,
             [

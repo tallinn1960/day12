@@ -22,16 +22,6 @@ func parse(line: String) -> oneLine {
     return oneLine(pattern: parts[0], groups: numbers)
 }
 
-// parse the input given as Data into an array of (String, [Int]), one for each line
-// lines are separated by newlines
-
-func parse(data: Data) -> [oneLine] {
-    let lines = String(data: data, encoding: .utf8)!.components(separatedBy: "\n")
-    return lines.compactMap { line in
-        if line.isEmpty { return nil }
-        return parse(line: line)
-    }
-}
 
 func count(pattern: Substring, groups: ArraySlice<Int>) -> Int {
     if pattern.isEmpty {
@@ -43,7 +33,7 @@ func count(pattern: Substring, groups: ArraySlice<Int>) -> Int {
     }
 
     if groups.isEmpty {
-        if pattern.firstIndex(of: "#") != nil {
+        if pattern.contains("#") {
             return 0
         } else {
             return 1
@@ -59,7 +49,7 @@ func count(pattern: Substring, groups: ArraySlice<Int>) -> Int {
     let g0 = groups.first!
     if (pattern.first == "#" || pattern.first == "?")
         && g0 <= pattern.count
-        && pattern.prefix(g0).firstIndex(of: ".") == nil
+        && !pattern.prefix(g0).contains(".")
         && (pattern.count == g0 || pattern.prefix(g0 + 1).last! != "#")
     {
         result += count(pattern: pattern.dropFirst(g0 + 1), groups: groups.dropFirst())
@@ -69,12 +59,14 @@ func count(pattern: Substring, groups: ArraySlice<Int>) -> Int {
 }
 
 func part1(data: Data) -> Int {
-    let parsed = parse(data: data)
+    let lines = String(data: data, encoding: .utf8)!.components(separatedBy: "\n")
     var result = 0
     let syncQueue = DispatchQueue(label: "syncQueue")
 
-    DispatchQueue.concurrentPerform(iterations: parsed.count) { i in
-        let it = count(pattern: parsed[i].pattern[...], groups: ArraySlice(parsed[i].groups))
+    DispatchQueue.concurrentPerform(iterations: lines.count) { i in
+        if lines[i].isEmpty { return }
+        let parsed = parse(line: lines[i])
+        let it = count(pattern: parsed.pattern[...], groups: ArraySlice(parsed.groups))
         syncQueue.sync { result += it }
     }
 
