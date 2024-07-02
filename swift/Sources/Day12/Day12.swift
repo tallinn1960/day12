@@ -69,13 +69,6 @@ func count(pattern: any StringProtocol, groups: ArraySlice<Int>) -> Int {
     return result;
 }
 
-func part1_single(data: Data) -> Int {
-    let parsed = parse(data: data)
-    return parsed.map { line in
-        return count(pattern: line.pattern, groups: ArraySlice(line.groups))
-    }.reduce(0, +)
-}
-
 func part1(data: Data) -> Int {
     let parsed = parse(data: data)
     var result = 0

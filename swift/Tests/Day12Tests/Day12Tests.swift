@@ -36,3 +36,20 @@ final class Day12Tests: XCTestCase {
         XCTAssertEqual(result, 21)
     }
 }
+
+final class Day12Performance: XCTestCase {
+    func test_part1() {
+        let data = try! Data(contentsOf: URL(fileURLWithPath: "../input.txt"))
+        #if os(macos)
+        measure(metrics: [XCTClockMetric(), XCTCPUMetric(), XCTMemoryMetric()]) {
+            let result = part1(data: data)
+            XCTAssertEqual(result, 7221)
+        }
+        #else 
+        measure {
+            let result = part1(data: data)
+            XCTAssertEqual(result, 7221)
+        }
+        #endif
+    }
+}
