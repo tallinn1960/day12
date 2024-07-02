@@ -3,7 +3,7 @@
 import Foundation
 
 struct OneLine {
-    let pattern: String
+    let pattern: Substring
     let groups: [Int]
 }
 
@@ -26,7 +26,7 @@ extension OneLine: Equatable {
 func parse(line: Substring) -> OneLine {
     let parts = line.components(separatedBy: " ")
     let numbers = parts[1].components(separatedBy: ",").compactMap { Int($0) }
-    return OneLine(pattern: parts[0], groups: numbers)
+    return OneLine(pattern: parts[0][...], groups: numbers)
 }
 
 func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice<Int>) -> Int {
@@ -46,7 +46,7 @@ func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice
         }
     }
 
-    let key = OneLine(pattern: String(pattern), groups: Array(groups))
+    let key = OneLine(pattern: pattern, groups: Array(groups))
     if let cached = cache[key] {
         return cached
     }
@@ -70,7 +70,7 @@ func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice
     return result;
 }
 
-func part1(data: Data) -> Int {
+public func part1(data: Data) -> Int {
     let lines = Substring(decoding: data, as: UTF8.self).split(separator: "\n")
     var result = 0
     let syncQueue = DispatchQueue(label: "syncQueue")
@@ -86,7 +86,7 @@ func part1(data: Data) -> Int {
     return result
 }
 
-func part2(data: Data) -> Int {
+public func part2(data: Data) -> Int {
     let lines = Substring(decoding: data, as: UTF8.self).split(separator: "\n")
     var result = 0
     let syncQueue = DispatchQueue(label: "syncQueue")
