@@ -4,7 +4,7 @@ import XCTest
 final class Day12Tests: XCTestCase {
     func test_OneLine() {
         let line = OneLine(pattern: "???.###", groups: [1, 1, 3])
-                        var cache : [OneLine : Int] = [:]
+        var cache: [OneLine: Int] = [:]
 
         let result = count(&cache, pattern: line.pattern[...], groups: line.groups[...])
         XCTAssertEqual(1, result)
@@ -33,7 +33,7 @@ final class Day12Tests: XCTestCase {
                 OneLine(pattern: "?###????????", groups: [3, 2, 1]),
             ])
 
-                var cache : [OneLine : Int] = [:]
+        var cache: [OneLine: Int] = [:]
 
         let result = parsed.map { line in
             return count(&cache, pattern: line.pattern[...], groups: ArraySlice(line.groups))
@@ -50,8 +50,8 @@ final class Day12Tests: XCTestCase {
             ????.######..#####. 1,6,5
             ?###???????? 3,2,1
             """.data(using: .utf8)!
-            let result = part2(data: data)
-            XCTAssertEqual(result, 525152)
+        let result = part2(data: data)
+        XCTAssertEqual(result, 525152)
     }
 
 }
@@ -72,7 +72,7 @@ final class Day12Performance: XCTestCase {
         #endif
     }
 
-        func test_part2() {
+    func test_part2() {
         let data = try! Data(contentsOf: URL(fileURLWithPath: "../input.txt"))
         #if os(macOS)
             measure(metrics: [XCTClockMetric(), XCTCPUMetric(), XCTMemoryMetric()]) {

@@ -29,7 +29,6 @@ func parse(line: Substring) -> OneLine {
     return OneLine(pattern: parts[0], groups: numbers)
 }
 
-
 func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice<Int>) -> Int {
     if pattern.isEmpty {
         if groups.isEmpty {
@@ -79,7 +78,7 @@ func part1(data: Data) -> Int {
     DispatchQueue.concurrentPerform(iterations: lines.count) { i in
         if lines[i].isEmpty { return }
         let parsed = parse(line: lines[i])
-        var cache : [OneLine: Int] = [:]
+        var cache: [OneLine: Int] = [:]
         let it = count(&cache, pattern: parsed.pattern[...], groups: ArraySlice(parsed.groups))
         syncQueue.sync { result += it }
     }
@@ -95,15 +94,16 @@ func part2(data: Data) -> Int {
     DispatchQueue.concurrentPerform(iterations: lines.count) { i in
         if lines[i].isEmpty { return }
         let parsed = parse(line: lines[i])
-        let pattern =  (0..<5).map { _ in parsed.pattern }.joined(separator: "?")
+        let pattern = (0..<5).map { _ in parsed.pattern }.joined(separator: "?")
         let groups = (0..<5).flatMap { _ in parsed.groups }
-                var cache : [OneLine : Int] = [:]
+        var cache: [OneLine: Int] = [:]
 
         let it = count(&cache, pattern: pattern[...], groups: ArraySlice(groups))
         syncQueue.sync { result += it }
     }
 
-    return result}
+    return result
+}
 
 @_cdecl("part1_swift")
 public func part1SwiftFFI(data: UnsafeMutablePointer<Int8>, length: Int) -> Int {
