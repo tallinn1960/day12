@@ -5,7 +5,7 @@ final class Day12Tests: XCTestCase {
     func test_oneLine() {
         let line = oneLine(pattern: "???.###", groups: [1, 1, 3])
         let result = count(pattern: line.pattern, groups: ArraySlice(line.groups))
-        XCTAssertEqual(result, 1)
+        XCTAssertEqual(1, result)
     }
 
     func test_sample() throws {

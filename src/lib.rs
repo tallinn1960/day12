@@ -1,4 +1,5 @@
 pub mod cpp;
+pub mod swift;
 
 use std::str::FromStr;
 

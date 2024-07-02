@@ -57,13 +57,40 @@ func count(pattern: any StringProtocol, groups: ArraySlice<Int>) -> Int {
     }
 
     let g0 = groups.first!
-    if pattern.first == "#" || pattern.first == "?" {
-        if g0 <= pattern.count && (pattern.prefix(g0).firstIndex(of: ".") == nil)
-            && (pattern.count == g0 || pattern.prefix(g0).last! != "#")
+    if (pattern.first == "#" || pattern.first == "?") 
+    && g0 <= pattern.count 
+    && pattern.prefix(g0).firstIndex(of: ".") == nil
+    && (pattern.count == g0 || pattern.prefix(g0 + 1).last! != "#")
         {
-            result += count(pattern: pattern.dropFirst(g0), groups: groups.dropFirst())
+            result += count(pattern: pattern.dropFirst(g0 + 1), groups: groups.dropFirst())
         }
-    }
+    
 
     return result;
+}
+
+func part1_single(data: Data) -> Int {
+    let parsed = parse(data: data)
+    return parsed.map { line in
+        return count(pattern: line.pattern, groups: ArraySlice(line.groups))
+    }.reduce(0, +)
+}
+
+func part1(data: Data) -> Int {
+    let parsed = parse(data: data)
+    var result = 0
+    let syncQueue = DispatchQueue(label: "syncQueue")
+
+    DispatchQueue.concurrentPerform(iterations: parsed.count) { i in
+        let it = count(pattern: parsed[i].pattern, groups: ArraySlice(parsed[i].groups))
+        syncQueue.sync {result += it}
+    }
+
+    return result
+}
+
+@_cdecl("part1_swift")
+public func part1SwiftFFI(data: UnsafeMutablePointer<Int8>, length: Int) -> Int {
+    let data = Data(bytesNoCopy: data, count: length, deallocator: .none)
+    return part1(data: data)
 }

@@ -13,6 +13,8 @@ fn main() {
     f.read_to_string(&mut buf).expect("can't read file");
     let result = p1(&buf);
     println!("{result}");
+    let result = day12::swift::p1(&buf);
+    println!("{result}");
     let result = p2(&buf);
     println!("{result}");
 }
