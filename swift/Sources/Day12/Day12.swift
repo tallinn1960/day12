@@ -16,7 +16,7 @@ extension oneLine: Equatable {
 // parse a line of input into a tuple of (String, [Int])
 // string and numbers are separated by a space, the numbers are separated by commas
 
-func parse(line: String) -> oneLine {
+func parse(line: Substring) -> oneLine {
     let parts = line.components(separatedBy: " ")
     let numbers = parts[1].components(separatedBy: ",").compactMap { Int($0) }
     return oneLine(pattern: parts[0], groups: numbers)
@@ -59,7 +59,7 @@ func count(pattern: Substring, groups: ArraySlice<Int>) -> Int {
 }
 
 func part1(data: Data) -> Int {
-    let lines = String(data: data, encoding: .utf8)!.components(separatedBy: "\n")
+    let lines = Substring(decoding: data, as: UTF8.self).split(separator: "\n")
     var result = 0
     let syncQueue = DispatchQueue(label: "syncQueue")
 

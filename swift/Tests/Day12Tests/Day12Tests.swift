@@ -18,7 +18,7 @@ final class Day12Tests: XCTestCase {
             ?###???????? 3,2,1
             """.data(using: .utf8)!
 
-        let parsed = String(data: data, encoding: .utf8)!.components(separatedBy: "\n").map(parse)
+        let parsed = Substring(decoding: data, as: UTF8.self).split(separator: "\n").map(parse)
 
         XCTAssertEqual(
             parsed,
