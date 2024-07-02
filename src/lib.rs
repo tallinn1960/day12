@@ -13,7 +13,7 @@ pub fn p1(input: &str) -> u64 {
         .map(parse)
         .map(|(pattern, groups)| {
             // part1 is solved much faster without an cache
-            count(&mut NoCache::default(), pattern, &groups) as u64
+            count(&mut NoCache, pattern, &groups) as u64
         })
         .sum::<u64>()
 }
@@ -38,7 +38,7 @@ pub fn p2(input: &str) -> u64 {
         .sum::<u64>()
 }
 
-fn parse<'a>(line: &'a str) -> (&'a str, Vec<usize>) {
+fn parse(line: &str) -> (&str, Vec<usize>) {
     let mut parts = line.split(' ');
     let pattern = parts
         .next()
@@ -57,7 +57,7 @@ fn parse<'a>(line: &'a str) -> (&'a str, Vec<usize>) {
     (pattern, plan)
 }
 
-trait CacheStorage<'a>: Default {
+trait CacheStorage<'a> {
     fn get(&self, key: &(&str, &[usize])) -> Option<usize>;
     fn insert(&mut self, key: (&'a str, &'a [usize]), value: usize);
 }
@@ -122,7 +122,6 @@ fn count<'a, C: CacheStorage<'a>>(
     result
 }
 
-#[derive(Default)]
 struct NoCache;
 
 impl CacheStorage<'_> for NoCache {
