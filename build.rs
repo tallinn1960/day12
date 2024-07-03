@@ -13,6 +13,8 @@ fn main() {
     println!("cargo:rustc-link-search=native={}", dst.display());
     println!("cargo:rustc-link-lib=dylib=day12swift");
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=CMakeLists.txt");
-    println!("cargo:rerun-if-changed=cpp/lib.cpp");
+    println!("cargo:rerun-if-changed=src/cpp/CMakeLists.txt");
+    println!("cargo:rerun-if-changed=src/cpp/lib.cpp");
+    println!("cargo:rerun-if-changed=swift/CMakeLists.txt");
+    println!("cargo:rerun-if-changed=swift/Sources/Day12/Day12.swift");
 }
