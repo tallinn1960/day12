@@ -79,8 +79,7 @@ func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice
 
 public func part1(data: Data) -> Int {
     let lines = Substring(decoding: data, as: UTF8.self).split(separator: "\n")
-    var result = 0
-    let syncQueue = DispatchQueue(label: "syncQueue")
+    var result: [Int] = [Int](repeating: 0, count: lines.count)
 
     DispatchQueue.concurrentPerform(iterations: lines.count) { index in
         if lines[index].isEmpty { return }
@@ -88,16 +87,15 @@ public func part1(data: Data) -> Int {
         var cache: [OneLine: Int] = [:]
         let patternMatches = count(
             &cache, pattern: parsed.pattern[...], groups: ArraySlice(parsed.groups))
-        syncQueue.sync { result += patternMatches }
+        result[index] = patternMatches
     }
 
-    return result
+    return result.reduce(0, +)
 }
 
 public func part2(data: Data) -> Int {
     let lines = Substring(decoding: data, as: UTF8.self).split(separator: "\n")
-    var result = 0
-    let syncQueue = DispatchQueue(label: "syncQueue")
+    var result: [Int] = [Int](repeating: 0, count: lines.count)
 
     DispatchQueue.concurrentPerform(iterations: lines.count) { index in
         if lines[index].isEmpty { return }
@@ -107,10 +105,10 @@ public func part2(data: Data) -> Int {
         var cache: [OneLine: Int] = [:]
 
         let patternMatches = count(&cache, pattern: pattern[...], groups: ArraySlice(groups))
-        syncQueue.sync { result += patternMatches }
+        result[index] = patternMatches
     }
-
-    return result
+    
+    return result.reduce(0, +)
 }
 
 @_cdecl("part1_swift")
