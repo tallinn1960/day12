@@ -4,7 +4,6 @@ use criterion::{criterion_group, criterion_main, BatchSize, Criterion};
 use day12::{p1, p2};
 use std::fs::File;
 use std::io::Read;
-use std::time::Duration;
 
 fn bench_p1(c: &mut Criterion) {
     let mut g = c.benchmark_group("criterion");
@@ -40,7 +39,9 @@ fn bench_p1_cpp(c: &mut Criterion) {
     g.finish();
 }
 
+#[cfg(feature = "swift")]
 fn bench_p1_swift(c: &mut Criterion) {
+    use std::time::Duration;
     let mut g = c.benchmark_group("criterion");
     g.measurement_time(Duration::from_secs(10));
     g.bench_function("part1_swift", |b| {
@@ -92,7 +93,9 @@ fn bench_p2_cpp(c: &mut Criterion) {
     g.finish()
 }
 
+#[cfg(feature = "swift")]
 fn bench_p2_swift(c: &mut Criterion) {
+    use std::time::Duration;
     let mut g = c.benchmark_group("criterion");
     g.measurement_time(Duration::from_secs(10));
     g.bench_function("part2_swift", |b| {
@@ -109,5 +112,10 @@ fn bench_p2_swift(c: &mut Criterion) {
     });
     g.finish()
 }
-criterion_group!(benches, bench_p1, bench_p1_cpp, bench_p1_swift, bench_p2, bench_p2_cpp, bench_p2_swift);
+criterion_group!(benches, bench_p1, bench_p1_cpp, bench_p2, bench_p2_cpp);
+#[cfg(feature = "swift")]
+criterion_group!(benches_swift, bench_p1_swift, bench_p2_swift);
+#[cfg(feature = "swift")]
+criterion_main!(benches, benches_swift);
+#[cfg(not(feature = "swift"))]
 criterion_main!(benches);

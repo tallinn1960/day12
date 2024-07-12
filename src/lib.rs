@@ -1,4 +1,5 @@
 pub mod cpp;
+#[cfg(feature = "swift")]
 pub mod swift;
 
 use std::str::FromStr;

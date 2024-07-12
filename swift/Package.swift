@@ -9,6 +9,7 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "Day12",
+            type: .dynamic,
             targets: ["Day12"]),
         .executable(name: "Day12Exe", targets: ["Day12Exe"]),
     ],
