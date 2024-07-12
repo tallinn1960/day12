@@ -107,8 +107,7 @@ fn count<'a, C: CacheStorage<'a>>(
     if (c == Some('#') || c == Some('?'))
         && groups[0] <= pattern.len()
         && pattern[..groups[0]].find('.').is_none()
-        && (groups[0] == pattern.len()
-            || pattern.chars().nth(groups[0]) != Some('#'))
+        && pattern.chars().nth(groups[0]) != Some('#')
     {
         // a block of nums[0] broken springs is possible
         // handle the rest, if any
@@ -195,11 +194,12 @@ mod tests {
     #[test]
     fn test_part2_sample() {
         let input = "???.### 1,1,3
-        .??..??...?##. 1,1,3
-        ?#?#?#?#?#?#?#? 1,3,1,6
-        ????.#...#... 4,1,1
-        ????.######..#####. 1,6,5
-        ?###???????? 3,2,1";
+.??..??...?##. 1,1,3
+?#?#?#?#?#?#?#? 1,3,1,6
+????.#...#... 4,1,1
+????.######..#####. 1,6,5
+?###???????? 3,2,1
+";
         let result = p2(input);
         assert_eq!(result, 525152);
     }
@@ -207,11 +207,11 @@ mod tests {
     #[test]
     fn test_part2_cpp_sample() {
         let input = "???.### 1,1,3
-    .??..??...?##. 1,1,3
-    ?#?#?#?#?#?#?#? 1,3,1,6
-    ????.#...#... 4,1,1
-    ????.######..#####. 1,6,5
-    ?###???????? 3,2,1";
+.??..??...?##. 1,1,3
+?#?#?#?#?#?#?#? 1,3,1,6
+????.#...#... 4,1,1
+????.######..#####. 1,6,5
+?###???????? 3,2,1";
         let result = cpp::p2(input);
         assert_eq!(result, 525152);
     }
