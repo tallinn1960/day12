@@ -11,7 +11,7 @@ fn main() {
         .generator("Ninja")
         .build();
     println!("cargo:rustc-link-search=native={}", dst.display());
-    println!("cargo:rustc-link-lib=dylib=day12swift");
+    println!("cargo:rustc-link-lib=static=day12swift");
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src/cpp/CMakeLists.txt");
     println!("cargo:rerun-if-changed=src/cpp/lib.cpp");
