@@ -1,3 +1,4 @@
+#[cfg(feature = "cpp")]
 pub mod cpp;
 #[cfg(feature = "swift")]
 pub mod swift;
@@ -6,8 +7,23 @@ use std::str::FromStr;
 
 // BTreeMap is slightly slower here
 use ahash::AHashMap;
+#[cfg(feature = "par")]
 use rayon::prelude::*;
 
+#[cfg(not(feature = "par"))]
+
+pub fn p1(input: &str) -> u64 {
+    input
+        .lines()
+        .map(parse)
+        .map(|(pattern, groups)| {
+            // part1 is solved much faster without an cache
+            count(&mut NoCache, pattern, &groups) as u64
+        })
+        .sum::<u64>()
+}
+
+#[cfg(feature = "par")]
 pub fn p1(input: &str) -> u64 {
     input
         .par_lines()
@@ -19,8 +35,30 @@ pub fn p1(input: &str) -> u64 {
         .sum::<u64>()
 }
 
+#[cfg(not(feature = "par"))]
 pub fn p2(input: &str) -> u64 {
-    input
+    input        
+        .lines()
+        .map(parse)
+        .map(|(l, plan)| {
+            let newpattern =
+                std::iter::repeat(l).take(5).collect::<Vec<_>>().join("?");
+            let newgroups = std::iter::repeat(plan)
+                .take(5)
+                .flatten()
+                .collect::<Vec<_>>();
+            (newpattern, newgroups)
+        })
+        .map(|(pattern, groups)| {
+            // part2 is solved much faster with a cache, its ms vs hours
+            count(&mut Cache::default(), &pattern, &groups) as u64
+        })
+        .sum::<u64>()
+}
+
+#[cfg(feature = "par")]
+pub fn p2(input: &str) -> u64 {
+    input        
         .par_lines()
         .map(parse)
         .map(|(l, plan)| {
@@ -165,30 +203,12 @@ mod tests {
         assert_eq!(result, 21);
     }
 
-    #[test]
-    fn test_part1_cpp_sample() {
-        let input = "???.### 1,1,3
-.??..??...?##. 1,1,3
-?#?#?#?#?#?#?#? 1,3,1,6
-????.#...#... 4,1,1
-????.######..#####. 1,6,5
-?###???????? 3,2,1
-";
-        let result = cpp::p1(input);
-        assert_eq!(result, 21);
-    }
+
 
     #[test]
     fn test_part1() {
         let input = include_str!("../input.txt");
         let result = p1(input);
-        assert_eq!(result, 7221);
-    }
-
-    #[test]
-    fn test_part1_cpp() {
-        let input = include_str!("../input.txt");
-        let result = cpp::p1(input);
         assert_eq!(result, 7221);
     }
 
@@ -205,18 +225,8 @@ mod tests {
         assert_eq!(result, 525152);
     }
 
-    #[test]
-    fn test_part2_cpp_sample() {
-        let input = "???.### 1,1,3
-.??..??...?##. 1,1,3
-?#?#?#?#?#?#?#? 1,3,1,6
-????.#...#... 4,1,1
-????.######..#####. 1,6,5
-?###???????? 3,2,1";
-        let result = cpp::p2(input);
-        assert_eq!(result, 525152);
-    }
 
+    
     #[test]
     fn test_part2() {
         let input = include_str!("../input.txt");
@@ -224,10 +234,4 @@ mod tests {
         assert_eq!(result, 7139671893722);
     }
 
-    #[test]
-    fn test_part2_cpp() {
-        let input = include_str!("../input.txt");
-        let result = cpp::p2(input);
-        assert_eq!(result, 7139671893722);
-    }
 }

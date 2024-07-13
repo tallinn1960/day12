@@ -54,7 +54,7 @@ func count(_ cache: inout [OneLine: Int], pattern: Substring, groups: ArraySlice
     var result = 0
 
     if pattern.first == "." || pattern.first == "?" {
-        result += count(&cache, pattern: pattern.dropFirst(), groups: groups)
+        result += count(&cache, pattern: pattern.dropFirst().drop(while: {$0 == "."}), groups: groups)
     }
 
     if pattern.first == "#" || pattern.first == "?" {

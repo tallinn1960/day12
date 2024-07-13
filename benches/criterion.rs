@@ -22,6 +22,7 @@ fn bench_p1(c: &mut Criterion) {
     g.finish();
 }
 
+#[cfg(feature = "cpp")]
 fn bench_p1_cpp(c: &mut Criterion) {
     let mut g = c.benchmark_group("criterion");
     g.bench_function("part1_cpp", |b| {
@@ -76,6 +77,7 @@ fn bench_p2(c: &mut Criterion) {
     g.finish()
 }
 
+#[cfg(feature = "cpp")]
 fn bench_p2_cpp(c: &mut Criterion) {
     let mut g = c.benchmark_group("criterion");
     g.bench_function("part2_cpp", |b| {
@@ -112,10 +114,26 @@ fn bench_p2_swift(c: &mut Criterion) {
     });
     g.finish()
 }
-criterion_group!(benches, bench_p1, bench_p1_cpp, bench_p2, bench_p2_cpp);
+
+criterion_group!(benches, bench_p1, bench_p2);
+
+#[cfg(feature = "cpp")]
+criterion_group!(benches_cpp, bench_p1_cpp, bench_p2_cpp);
 #[cfg(feature = "swift")]
 criterion_group!(benches_swift, bench_p1_swift, bench_p2_swift);
-#[cfg(feature = "swift")]
-criterion_main!(benches, benches_swift);
+
 #[cfg(not(feature = "swift"))]
+#[cfg(not(feature = "cpp"))]
 criterion_main!(benches);
+
+#[cfg(feature = "cpp")]
+#[cfg(not(feature = "swift"))]
+criterion_main!(benches, benches_cpp);
+
+#[cfg(feature = "swift")]
+#[cfg(not(feature = "cpp"))]
+criterion_main!(benches, benches_swift);
+
+#[cfg(feature = "cpp")]
+#[cfg(feature = "swift")]
+criterion_main!(benches, benches_cpp, benches_swift);

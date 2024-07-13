@@ -13,8 +13,12 @@ fn main() {
         let result = day12::swift::p1(&buf);
         println!("p1_swift: {result}");
     }
-    let result = day12::cpp::p1(&buf);
-    println!("p1_cpp: {result}");
+    #[cfg(feature = "cpp")]
+    {
+        let result = day12::cpp::p1(&buf);
+        println!("p1_cpp: {result}");
+
+    }
     let result = p2(&buf);
     println!("p2: {result}");
 }

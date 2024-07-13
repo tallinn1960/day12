@@ -1,4 +1,5 @@
 fn main() {
+    #[cfg(feature = "cpp")]
     build_cpp();
     #[cfg(feature = "swift")]       
     build_swift();
@@ -12,10 +13,11 @@ fn build_swift() {
     .generator("Ninja")
     .build();
     println!("cargo:rustc-link-search=native={}", dst.display());
-    println!("cargo:rustc-link-lib=dylib=day12swift");
+    println!("cargo:rustc-link-lib=static=day12swift");
     println!("cargo:rerun-if-changed=swift/Sources/Day12/Day12.swift");
 }
 
+#[cfg(feature = "cpp")]
 fn build_cpp() {
     let dst = cmake::Config::new("src/cpp")
         .define("CMAKE_EXPORT_COMPILE_COMMANDS", "YES")

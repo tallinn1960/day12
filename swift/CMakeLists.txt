@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.5)
 project(day12swift Swift)
-add_library(day12swift SHARED Sources/Day12/Day12.swift)
-target_link_options(day12swift PUBLIC -Xlinker -rpath=./ )
+add_library(day12swift STATIC Sources/Day12/Day12.swift)
 install(TARGETS day12swift DESTINATION .)
