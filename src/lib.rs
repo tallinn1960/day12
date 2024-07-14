@@ -57,7 +57,7 @@ fn parse(line: &str) -> (&str, Vec<usize>) {
     let pattern = parts
         .next()
         .unwrap_or_else(|| panic!("No pattern in line {line}"));
-    let plan = parts
+    let groups = parts
         .next()
         .map(|p| {
             p.split(',').fold(vec![], |mut acc, numberstring| {
@@ -68,7 +68,7 @@ fn parse(line: &str) -> (&str, Vec<usize>) {
             })
         })
         .unwrap_or_else(|| panic!("No numbers in line {line}"));
-    (pattern, plan)
+    (pattern, groups)
 }
 
 trait CacheStorage<'a> {
