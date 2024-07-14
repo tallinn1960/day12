@@ -81,39 +81,36 @@ fn count<'a>(
     pattern: &'a str,
     groups: &'a [usize],
 ) -> usize {
-    // trivial cases for early return
     match (pattern, groups) {
-        ("", []) => return 1,
-        ("", _) => return 0,
-        (_, []) => return if pattern.contains('#') { 0 } else { 1 },
-        _ => {
-            if let Some(result) = cache.get(&(pattern, groups)) {
-                return result;
-            }
-        }
+        ("", []) =>  1,
+        ("", _) =>  0,
+        (_, []) => if pattern.contains('#') { 0 } else { 1 },
+        _ => if let Some(result) = cache.get(&(pattern, groups)) {
+                result
+            } else {
+                let mut result = 0;
+                let c = pattern.chars().next();
+            
+                if c == Some('.') || c == Some('?') { // '.', '?' is '.' case
+                    result += count(cache, pattern[1..].trim_start_matches(|c| c == '.'), groups);
+                }
+            
+                if (c == Some('#') || c == Some('?')) // '#', '?' is '#' case
+                    // there are enough chars in the pattern
+                    && pattern.len() >= groups[0] 
+                    // no . within group
+                    && !pattern[..groups[0]].contains('.') 
+                    // no # after the end
+                    && pattern.chars().nth(groups[0]) != Some('#')
+                {
+                    // found a block of nums[0] broken springs in the pattern
+                    // handle the rest, if any
+                    result += count(cache, &pattern[pattern.len().min(groups[0] + 1)..], &groups[1..])
+                }
+                cache.insert((pattern, groups), result);
+                result
+            }   
     }
-
-    let mut result = 0;
-    let c = pattern.chars().next();
-
-    if c == Some('.') || c == Some('?') { // '.', '?' is '.' case
-        result += count(cache, pattern[1..].trim_start_matches(|c| c == '.'), groups);
-    }
-
-    if (c == Some('#') || c == Some('?')) // '#', '?' is '#' case
-        // there are enough chars in the pattern
-        && pattern.len() >= groups[0] 
-        // no . within group
-        && !pattern[..groups[0]].contains('.') 
-        // no # after the end
-        && pattern.chars().nth(groups[0]) != Some('#')
-    {
-        // found a block of nums[0] broken springs in the pattern
-        // handle the rest, if any
-        result += count(cache, &pattern[pattern.len().min(groups[0] + 1)..], &groups[1..])
-    }
-    cache.insert((pattern, groups), result);
-    result
 }
 
 struct NoCache;
