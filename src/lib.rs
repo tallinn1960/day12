@@ -2,19 +2,29 @@
 pub mod cpp;
 #[cfg(feature = "swift")]
 pub mod swift;
+#[cfg(feature = "par")]
+use rayon::prelude::*;
+#[cfg(feature = "par")]
+macro_rules! lines {
+    ($input:ident) => {
+        $input.par_lines()
+    };
+}
+#[cfg(not(feature = "par"))]
+macro_rules! lines {
+    ($input:ident) => {
+        $input.lines()
+    };
+}
 
 use std::str::FromStr;
 
 // BTreeMap is slightly slower here
 use ahash::AHashMap;
-#[cfg(feature = "par")]
-use rayon::prelude::*;
-
-#[cfg(not(feature = "par"))]
+type CacheMap<'a> = AHashMap<(&'a str, &'a [usize]), usize>;
 
 pub fn p1(input: &str) -> u64 {
-    input
-        .lines()
+    lines!(input)
         .map(parse)
         .map(|(pattern, groups)| {
             // part1 is solved much faster without an cache
@@ -23,43 +33,8 @@ pub fn p1(input: &str) -> u64 {
         .sum::<u64>()
 }
 
-#[cfg(feature = "par")]
-pub fn p1(input: &str) -> u64 {
-    input
-        .par_lines()
-        .map(parse)
-        .map(|(pattern, groups)| {
-            // part1 is solved much faster without an cache
-            count(&mut NoCache, pattern, &groups) as u64
-        })
-        .sum::<u64>()
-}
-
-#[cfg(not(feature = "par"))]
 pub fn p2(input: &str) -> u64 {
-    input        
-        .lines()
-        .map(parse)
-        .map(|(l, plan)| {
-            let newpattern =
-                std::iter::repeat(l).take(5).collect::<Vec<_>>().join("?");
-            let newgroups = std::iter::repeat(plan)
-                .take(5)
-                .flatten()
-                .collect::<Vec<_>>();
-            (newpattern, newgroups)
-        })
-        .map(|(pattern, groups)| {
-            // part2 is solved much faster with a cache, its ms vs hours
-            count(&mut Cache::default(), &pattern, &groups) as u64
-        })
-        .sum::<u64>()
-}
-
-#[cfg(feature = "par")]
-pub fn p2(input: &str) -> u64 {
-    input        
-        .par_lines()
+    lines!(input)
         .map(parse)
         .map(|(l, plan)| {
             let newpattern =
@@ -101,60 +76,41 @@ trait CacheStorage<'a> {
     fn insert(&mut self, key: (&'a str, &'a [usize]), value: usize);
 }
 
-fn count<'a, C: CacheStorage<'a>>(
-    cache: &mut C,
+fn count<'a>(
+    cache: &mut impl CacheStorage<'a>,
     pattern: &'a str,
     groups: &'a [usize],
-) 
--> usize {
-    // uses recursion, but stack usage per call is low and depth is
-    // limited by the length of the pattern
-    if pattern.is_empty() {
-        if groups.is_empty() {
-            return 1;
-        } else {
-            return 0;
+) -> usize {
+    // trivial cases for early return
+    match (pattern, groups) {
+        ("", []) => return 1,
+        ("", _) => return 0,
+        (p, []) => return if p.find('#').is_some() { 0 } else { 1 },
+        _ => {
+            if let Some(result) = cache.get(&(pattern, groups)) {
+                return result;
+            }
         }
-    }
-    if groups.is_empty() {
-        if pattern.find('#').is_some() {
-            return 0;
-        } else {
-            return 1;
-        }
-    }
-
-    if let Some(result) = cache.get(&(pattern, groups)) {
-        return result;
     }
 
     let mut result = 0;
     let c = pattern.chars().next();
 
-    if c == Some('.') || c == Some('?') {
-        // ? is . case
-        result += count(cache, &pattern[1..], groups);
+    if c == Some('.') || c == Some('?') { // '.', '?' is '.' case
+        result += count(cache, &pattern[1..].trim_start_matches(|c| c == '.'), groups);
     }
 
-    // if we treat the ? as # or have an #
-    // we can start a block. Look for a sequence
-    // of nums[0] characters that are # or ?
-    // and terminated by a . or ?
-    // that fulfills the first entry in nums,
-    // handle the rest of the string with the
-    // rest of the nums
-    if (c == Some('#') || c == Some('?'))
-        && groups[0] <= pattern.len()
-        && pattern[..groups[0]].find('.').is_none()
+    if (c == Some('#') || c == Some('?')) // '#', '?' is '#' case
+        // there are enough chars in the pattern
+        && pattern.len() >= groups[0] 
+        // no . within group
+        && pattern[..groups[0]].find('.').is_none() 
+        // no # after the end
         && pattern.chars().nth(groups[0]) != Some('#')
     {
-        // a block of nums[0] broken springs is possible
+        // found a block of nums[0] broken springs in the pattern
         // handle the rest, if any
-        if groups[0] == pattern.len() {
-            result += count(cache, "", &groups[1..])
-        } else {
-            result += count(cache, &pattern[groups[0] + 1..], &groups[1..])
-        }
+        result += count(cache, &pattern[pattern.len().min(groups[0] + 1)..], &groups[1..])
     }
     cache.insert((pattern, groups), result);
     result
@@ -172,7 +128,7 @@ impl CacheStorage<'_> for NoCache {
 
 #[derive(Default)]
 struct Cache<'a> {
-    cache: AHashMap<(&'a str, &'a [usize]), usize>,
+    cache: CacheMap<'a>,
 }
 
 impl<'a> CacheStorage<'a> for Cache<'a> {
@@ -203,8 +159,6 @@ mod tests {
         assert_eq!(result, 21);
     }
 
-
-
     #[test]
     fn test_part1() {
         let input = include_str!("../input.txt");
@@ -225,13 +179,10 @@ mod tests {
         assert_eq!(result, 525152);
     }
 
-
-    
     #[test]
     fn test_part2() {
         let input = include_str!("../input.txt");
         let result = p2(input);
         assert_eq!(result, 7139671893722);
     }
-
 }
