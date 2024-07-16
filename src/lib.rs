@@ -36,10 +36,10 @@ pub fn p1(input: &str) -> u64 {
 pub fn p2(input: &str) -> u64 {
     lines!(input)
         .map(parse)
-        .map(|(l, plan)| {
+        .map(|(l, groups)| {
             let newpattern =
                 std::iter::repeat(l).take(5).collect::<Vec<_>>().join("?");
-            let newgroups = std::iter::repeat(plan)
+            let newgroups = std::iter::repeat(groups)
                 .take(5)
                 .flatten()
                 .collect::<Vec<_>>();
@@ -103,7 +103,7 @@ fn count<'a>(
                     // no # after the end
                     && pattern.chars().nth(groups[0]) != Some('#')
                 {
-                    // found a block of nums[0] broken springs in the pattern
+                    // found a block of groups[0] broken springs in the pattern
                     // handle the rest, if any
                     result += count(cache, &pattern[pattern.len().min(groups[0] + 1)..], &groups[1..])
                 }
